@@ -1,0 +1,1 @@
+python3 train.py "/home/agnieszka/Repos/TACO/data" --model tf_efficientdet_d0 -b 4 --lr .09 --warmup-epochs 5 --model-ema --dataset TACOCfg
