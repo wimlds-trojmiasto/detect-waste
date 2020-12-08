@@ -224,11 +224,13 @@ def main():
     args.distributed = False
     if 'WORLD_SIZE' in os.environ:
         args.distributed = int(os.environ['WORLD_SIZE']) > 1
-    args.device = 'cuda:0'
-    args.world_size = 1
-    args.rank = 0  # global rank
+    args.device = 'cuda:7'
+    args.world_size = 4
+    args.rank = 7  # global rank
+    args.GPUs = [4, 5, 6, 7]
+    print('Using CUDA:', args.GPUs[args.local_rank] )
     if args.distributed:
-        args.device = 'cuda:%d' % args.local_rank
+        args.device = 'cuda:%d' % args.GPUs[args.local_rank] 
         torch.cuda.set_device(args.local_rank)
         torch.distributed.init_process_group(backend='nccl', init_method='env://')
         args.world_size = torch.distributed.get_world_size()

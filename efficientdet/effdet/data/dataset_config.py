@@ -27,10 +27,10 @@ class Coco2017Cfg(CocoCfg):
         
 @dataclass
 class TACOCfg(CocoCfg):
-    variant: str = '2017'
+    variant: str = 'original'
     splits: Dict[str, dict] = field(default_factory=lambda: dict(
-        train=dict(ann_filename='annotations_update.json', img_dir='', has_labels=True),
-        val=dict(ann_filename='annotations_update.json', img_dir='', has_labels=True),
+        train=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/efficientdet/annotations/annotations-detectwaste-updated.json', img_dir='/dih4/dih4_2/wimlds/TACO-master/data/', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/efficientdet/annotations/annotations-detectwaste-updated.json', img_dir='/dih4/dih4_2/wimlds/TACO-master/data/', has_labels=True),
     ))
         
 
