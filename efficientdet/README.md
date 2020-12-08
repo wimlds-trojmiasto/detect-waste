@@ -1,3 +1,5 @@
+# Implementation from: https://github.com/rwightman/efficientdet-pytorch
+
 # EfficientDet (PyTorch)
 
 A PyTorch implementation of EfficientDet.
