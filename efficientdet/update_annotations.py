@@ -1,7 +1,7 @@
 import json
 
 # in efficientdet implementation categories should start from 1 not 0
-with open('/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_detectwaste.json', 'r') as f:
+with open('/dih4/dih4_2/wimlds/data/annotations_epi.json', 'r') as f:
     dataset = json.loads(f.read())
 
 for category in dataset['categories']:
