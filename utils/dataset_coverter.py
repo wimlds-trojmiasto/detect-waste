@@ -1,27 +1,30 @@
 import json
 
-# Read annotations
-with open('/dih4/dih4_2/wimlds/TACO-master/data/annotations.json', 'r') as f:
-    dataset = json.loads(f.read())
+def taco_categories_to_detectwaste(source, dest):
+    # function that updates taco annotations to detectwaste categories
+    # from sixty categories to glass, metals_and_plastics, non_recyclable
+    # other, paper, bio, unknown
+    
+    with open(source, 'r') as f:
+        dataset = json.loads(f.read())
 
-def convert_taco_to_detectwaste(dataset):
     def taco_to_detectwaste(label):
         # converts taco categories names to detectwaste
         glass = ['Glass bottle','Broken glass','Glass jar']
-        metals_and_plastics = ['Aluminium foil', "Clear plastic bottle","Other plastic bottle",
+        metals_and_plastic = ['Aluminium foil', "Clear plastic bottle","Other plastic bottle",
                              "Plastic bottle cap","Metal bottle cap","Aerosol","Drink can",
                              "Food can","Drink carton","Disposable plastic cup","Other plastic cup",
                              "Plastic lid","Metal lid","Single-use carrier bag","Polypropylene bag",
                              "Plastic Film","Six pack rings","Spread tub","Tupperware",
                              "Disposable food container","Other plastic container",
                              "Plastic glooves","Plastic utensils","Pop tab","Scrap metal",
-                             "Plastic straw","Other plastic", "Plastic film", "Food Can"]
+                             "Plastic straw","Other plastic", "Plastic film", "Food Can", "Crisp packet"]
 
         non_recyclable = ["Aluminium blister pack","Carded blister pack",
                         "Meal carton","Pizza box","Cigarette","Paper cup",
                         "Meal carton","Foam cup","Glass cup","Wrapping paper",
                         "Magazine paper","Garbage bag","Plastified paper bag",
-                        "Crisp packet","Other plastic wrapper","Foam food container",
+                        "Other plastic wrapper","Foam food container",
                         "Rope","Shoe","Squeezable tube","Paper straw","Styrofoam piece",
                         "Rope & strings", "Tissues"]
 
@@ -32,10 +35,10 @@ def convert_taco_to_detectwaste(dataset):
 
         if (label in glass):
                 label="glass"
-        elif (label in metals_and_plastics):
-                label="metals_and_plastics"
+        elif (label in metals_and_plastic):
+                label="metals_and_plastic"
         elif(label in non_recyclable):
-                label="non-recyclable"
+                label="non_recyclable"
         elif(label in other):
                 label="other"
         elif (label in paper):
@@ -71,7 +74,7 @@ def convert_taco_to_detectwaste(dataset):
         
     detectwaste_ids = {}
     detectwaste_cat_names = []
-    cat_id = 0
+    cat_id = 1
     for cat in detectwaste_categories:
         if cat['supercategory'] not in detectwaste_ids:
             detectwaste_cat_names.append(cat['supercategory'])
@@ -106,8 +109,45 @@ def convert_taco_to_detectwaste(dataset):
         cat['id'] = id
         
     print('Finished. New ids:', detectwaste_ids)
-    return dataset
+    with open(dest, 'w') as f:
+        json.dump(dataset, f)   
+        
 
-detectwaste_dataset = convert_taco_to_detectwaste(dataset)
-with open('annotations/annotations_detectwaste.json', 'w') as f:
-    json.dump(detectwaste_dataset, f)
+
+def convert_dataset(annotations_template_path, annotations_to_convert_path, save_path):
+    # function converts dataset_to_convert to match categories in dataset_template
+    # it is designed to work with detectwaste and epinote categories
+    with open(annotations_template_path, 'r') as f:
+        dataset_template = json.loads(f.read())
+    with open(annotations_to_convert_path, 'r') as f:
+        dataset_to_convert = json.loads(f.read())
+    
+    template_categories = []
+    categories = []
+    template_to_new = {}
+    template_id_to_new_id = {}
+
+    for i, (template_category, category) in enumerate(zip(dataset_template['categories'], dataset_to_convert['categories'])):
+        template_categories.append(template_category['name'])
+        categories.append(category['name'])
+        template_to_new[category['name']] = template_category['name']
+        category['name'] = template_category['name']
+        category['category'] = template_category['name']
+        category['supercategory'] = ''
+
+    # make a dictionary template_id = new_id
+    for template_id, category in enumerate(categories):
+        new_id = template_categories.index(category)
+        template_id_to_new_id[template_id+1] = new_id+1
+
+    print('Old categories:', categories)
+    print('New categories:', template_categories)
+    for annt in dataset_to_convert['annotations']:
+        annt['category_id'] = template_id_to_new_id[annt['category_id']]
+
+    with open(save_path, 'w') as f:
+        dataset = json.dump(dataset_to_convert, f)
+        
+    print('Finished')
+
+
