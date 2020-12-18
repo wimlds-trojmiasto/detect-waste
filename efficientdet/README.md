@@ -5,5 +5,4 @@ A PyTorch EfficientDet for detecting waste using implementation from  [efficient
 
 # Dataset
 * we use TACO dataset with additional annotated data from detect-waste
-
-
+* remember to put your path to data in dataset config */efficientdet/effdet/data/dataset_config.py*
