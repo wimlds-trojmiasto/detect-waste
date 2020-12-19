@@ -121,11 +121,13 @@ class CocoEvaluator(Evaluator):
 class TfmEvaluator(Evaluator):
     """ Tensorflow Models Evaluator Wrapper """
     def __init__(
-            self, dataset, distributed=False, pred_yxyx=False, evaluator_cls=tfm_eval.ObjectDetectionEvaluator):
+            self, dataset, neptune, distributed=False, pred_yxyx=False, 
+            evaluator_cls=tfm_eval.ObjectDetectionEvaluator):
         super().__init__(distributed=distributed, pred_yxyx=pred_yxyx)
         self._evaluator = evaluator_cls(categories=dataset.parser.cat_dicts)
         self._eval_metric_name = self._evaluator._metric_names[0]
         self._dataset = dataset.parser
+        self.neptune = neptune
 
     def reset(self):
         self._evaluator.clear()
@@ -146,6 +148,10 @@ class TfmEvaluator(Evaluator):
             _logger.info('Metrics:')
             for k, v in metrics.items():
                 _logger.info(f'{k}: {v}')
+                if self.neptune != None:
+                    key = 'valid/mAP/' + str(k).split('/')[-1]
+                    self.neptune.log_metric(key, v)
+                
             map_metric = metrics[self._eval_metric_name]
             if self.distributed:
                 dist.broadcast(torch.tensor(map_metric, device=self.distributed_device), 0)
@@ -162,9 +168,9 @@ class TfmEvaluator(Evaluator):
 
 class PascalEvaluator(TfmEvaluator):
 
-    def __init__(self, dataset, distributed=False, pred_yxyx=False):
+    def __init__(self, dataset,neptune, distributed=False, pred_yxyx=False):
         super().__init__(
-            dataset, distributed=distributed, pred_yxyx=pred_yxyx, evaluator_cls=tfm_eval.PascalDetectionEvaluator)
+            dataset, neptune, distributed=distributed, pred_yxyx=pred_yxyx, evaluator_cls=tfm_eval.PascalDetectionEvaluator)
 
 
 class OpenImagesEvaluator(TfmEvaluator):
@@ -174,11 +180,11 @@ class OpenImagesEvaluator(TfmEvaluator):
             dataset, distributed=distributed, pred_yxyx=pred_yxyx, evaluator_cls=tfm_eval.OpenImagesDetectionEvaluator)
 
 
-def create_evaluator(name, dataset, distributed=False, pred_yxyx=False):
+def create_evaluator(name, dataset, neptune, distributed=False, pred_yxyx=False):
     # FIXME support OpenImages Challenge2019 metric w/ image level label consideration
     if 'coco' in name:
         return CocoEvaluator(dataset, distributed=distributed, pred_yxyx=pred_yxyx)
     elif 'openimages' in name:
         return OpenImagesEvaluator(dataset, distributed=distributed, pred_yxyx=pred_yxyx)
     else:
-        return PascalEvaluator(dataset, distributed=distributed, pred_yxyx=pred_yxyx)
+        return PascalEvaluator(dataset, neptune, distributed=distributed, pred_yxyx=pred_yxyx)

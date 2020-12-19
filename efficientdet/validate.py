@@ -149,7 +149,7 @@ def validate(args):
         num_workers=args.workers,
         pin_mem=args.pin_mem)
 
-    evaluator = create_evaluator(args.dataset, dataset, pred_yxyx=False)
+    evaluator = create_evaluator(args.dataset, dataset, neptune = None, pred_yxyx=False)
     bench.eval()
     batch_time = AverageMeter()
     end = time.time()
