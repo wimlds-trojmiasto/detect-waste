@@ -23,3 +23,11 @@ class TACOCfg(CocoCfg):
         #test=dict(ann_filename='annotations/image_info_test2017.json', img_dir='test2017', has_labels=False),
         #testdev=dict(ann_filename='annotations/image_info_test-dev2017.json', img_dir='test2017', has_labels=False),
     ))
+    
+@dataclass
+class DetectwasteCfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        val=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_train.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
+        train=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_test.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
+    ))
