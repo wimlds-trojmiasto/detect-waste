@@ -108,7 +108,7 @@ def taco_categories_to_detectwaste(source, dest):
         cat['category'] = category
         cat['id'] = id
         
-    print('Finished. New ids:', detectwaste_ids)
+    print('Finished converting ids. New ids:', detectwaste_ids)
     with open(dest, 'w') as f:
         json.dump(dataset, f)   
         
@@ -148,6 +148,43 @@ def convert_dataset(annotations_template_path, annotations_to_convert_path, save
     with open(save_path, 'w') as f:
         dataset = json.dump(dataset_to_convert, f)
         
-    print('Finished')
+    print('Finished converting dataset')
 
+
+def concatenate_datasets(list_of_datasets, dest = None):
+    # concatenate list of datasets into one single file
+    # the first dataset in the list will be used as a base
+    # and the rest of datasets will be appended         
+    
+    last_id = 0
+    for i, annot in enumerate(list_of_datasets):
+        with open(annot, 'r') as f:
+            dataset = json.loads(f.read())
+
+        anns = dataset['annotations'].copy()
+        images = dataset['images'].copy()
+        
+        if last_id > 0: 
+            for ann in anns:
+                ann['id'] += last_id
+                ann['image_id'] += last_im_id
+            for im in images:
+                im['id'] += last_im_id
+            concat_dataset['images'] += images
+            concat_dataset['annotations'] += anns
+        else:
+            concat_dataset = dataset.copy()
+
+        last_id = len(anns)
+        last_im_id = len(images)
+        
+    print("Concatenated ",len(concat_dataset['annotations']), " bboxes, ",
+           len(concat_dataset['images']), 'images in total.')
+    
+    if dest == None:
+        return concat_dataset
+    else:
+        with open(dest, 'w') as f:
+            json.dump(concat_dataset, f) 
+        print('Saved results to', dest)
 
