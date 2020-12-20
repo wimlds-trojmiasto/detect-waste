@@ -14,6 +14,7 @@ import argparse
 import time
 import yaml
 import logging
+import neptune
 from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
@@ -217,8 +218,13 @@ def _parse_args():
 
 def main():
     setup_default_logging()
+   
     args, args_text = _parse_args()
-
+    
+    # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
+    neptune.init(project_qualified_name = 'detectwaste/efficientdet')
+    neptune.create_experiment(name=args.model)
+    
     args.pretrained_backbone = not args.no_pretrained_backbone
     args.prefetcher = not args.no_prefetcher
     args.distributed = False
@@ -391,6 +397,7 @@ def main():
         with open(os.path.join(output_dir, 'args.yaml'), 'w') as f:
             f.write(args_text)
 
+    # training loop
     try:
         for epoch in range(start_epoch, num_epochs):
             if args.distributed:
@@ -414,6 +421,9 @@ def main():
                 eval_metrics = validate(model_ema.ema, loader_eval, args, evaluator, log_suffix=' (EMA)')
             else:
                 eval_metrics = validate(model, loader_eval, args, evaluator)
+                
+            neptune.log_metric('valid/mAP',eval_metrics[eval_metric])
+
 
             if lr_scheduler is not None:
                 # step LR for next epoch
@@ -483,14 +493,16 @@ def create_datasets_and_loaders(args, model_config):
         anchor_labeler=labeler,
     )
 
-    evaluator = create_evaluator(args.dataset, loader_eval.dataset, distributed=args.distributed, pred_yxyx=False)
+    evaluator = create_evaluator(args.dataset, loader_eval.dataset, neptune,
+                                 distributed=args.distributed, pred_yxyx=False)
 
     return loader_train, loader_eval, evaluator
 
 
 def train_epoch(
         epoch, model, loader, optimizer, args,
-        lr_scheduler=None, saver=None, output_dir='', amp_autocast=suppress, loss_scaler=None, model_ema=None):
+        lr_scheduler=None, saver=None, output_dir='', 
+        amp_autocast=suppress, loss_scaler=None, model_ema=None):
 
     batch_time_m = AverageMeter()
     data_time_m = AverageMeter()
@@ -511,7 +523,8 @@ def train_epoch(
         with amp_autocast():
             output = model(input, target)
         loss = output['loss']
-
+        neptune.log_metric('train/loss', loss.item())
+        
         if not args.distributed:
             losses_m.update(loss.item(), input.size(0))
 
@@ -555,7 +568,7 @@ def train_epoch(
                         rate_avg=input.size(0) * args.world_size / batch_time_m.avg,
                         lr=lr,
                         data_time=data_time_m))
-
+                    
                 if args.save_images and output_dir:
                     torchvision.utils.save_image(
                         input,
@@ -593,7 +606,8 @@ def validate(model, loader, args, evaluator=None, log_suffix=''):
 
             output = model(input, target)
             loss = output['loss']
-
+            neptune.log_metric('valid/loss', loss.item())
+            
             if evaluator is not None:
                 evaluator.add_predictions(output['detections'], target)
 
@@ -619,6 +633,7 @@ def validate(model, loader, args, evaluator=None, log_suffix=''):
     metrics = OrderedDict([('loss', losses_m.avg)])
     if evaluator is not None:
         metrics['map'] = evaluator.evaluate()
+    
 
     return metrics
 

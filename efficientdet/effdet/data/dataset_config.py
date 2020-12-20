@@ -15,11 +15,11 @@ class CocoCfg:
     splits: Dict[str, dict] = None
 
 @dataclass
-class Coco2017Cfg(CocoCfg):
+class TACOCfg(CocoCfg):
     variant: str = '2017'
     splits: Dict[str, dict] = field(default_factory=lambda: dict(
-        train=dict(ann_filename='annotations/instances_train2017.json', img_dir='train2017', has_labels=True),
-        val=dict(ann_filename='annotations/instances_val2017.json', img_dir='val2017', has_labels=True),
-        test=dict(ann_filename='annotations/image_info_test2017.json', img_dir='test2017', has_labels=False),
-        testdev=dict(ann_filename='annotations/image_info_test-dev2017.json', img_dir='test2017', has_labels=False),
+        val=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_detectwaste.json', img_dir='/dih4/dih4_2/wimlds/TACO-master/data/', has_labels=True),
+        train=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations-epi.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
+        #test=dict(ann_filename='annotations/image_info_test2017.json', img_dir='test2017', has_labels=False),
+        #testdev=dict(ann_filename='annotations/image_info_test-dev2017.json', img_dir='test2017', has_labels=False),
     ))
