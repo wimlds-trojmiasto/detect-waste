@@ -14,11 +14,13 @@ def get_args_parser():
     parser = argparse.ArgumentParser(
         'Prepare images of trash for classification task')
     parser.add_argument('--epi_source', help='path to epinote annotations',
-                        default='/dih4/dih4_2/wimlds/data/annotations_epi.json',
+                        default='/dih4/dih4_2/wimlds/data'
+                                '/annotations_epi.json',
                         type=str)
     parser.add_argument('--taco_source',
                         help='path to taco annotations',
-                        default='/dih4/dih4_2/wimlds/TACO-master/data/annotations.json',
+                        default='/dih4/dih4_2/wimlds/TACO-master'
+                                '/data/annotations.json',
                         type=str)
     parser.add_argument('--detectwaste_dest',
                         help='path to detectwaste annotations',
