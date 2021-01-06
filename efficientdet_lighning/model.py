@@ -1,4 +1,5 @@
 from efficientdet_lighning.efficientdet.factory import create_model
+
 model = create_model(
     model_name='tf_efficientdet_d2',
     bench_task='train',
@@ -12,5 +13,7 @@ model = create_model(
     bench_labeler=None,
     checkpoint_path='',
 )
+
+model_config = model.config
 if __name__ == '__main__':
     print(model)
