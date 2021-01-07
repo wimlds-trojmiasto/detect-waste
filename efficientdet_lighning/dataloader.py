@@ -59,7 +59,7 @@ def create_datasets_and_loaders(args, model_config):
         anchor_labeler=labeler,
     )
 
-    evaluator = create_evaluator('DetectwasteCfg', loader_eval.dataset, neptune,
+    evaluator = create_evaluator('DetectwasteCfg', loader_eval.dataset,
                                  distributed=False, pred_yxyx=False)
 
     return loader_train, loader_eval, evaluator

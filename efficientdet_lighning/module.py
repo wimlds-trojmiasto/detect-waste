@@ -39,8 +39,29 @@ class EfficientDetModule(pl.LightningModule):
         # TO DO model_ema
         return {'loss': loss}
 
+    def validation_step(self, batch, batch_idx):
+        input, target = batch
+        output = self.forward(input, target)
+        loss = output['loss']
+        self.log('val/loss', loss, sync_dist=True)
+        return {'val_loss': loss,
+                'detections': output['detections'],
+                'target': target}
+
+    def validation_epoch_end(self, outputs):
+        for batch in outputs:
+            self.evaluator.add_predictions(batch['detections'], batch['target'])
+        metrics = self.evaluator.evaluate()
+        for key, metric in metrics.items():
+            metric_name = key.split('/')[-1]
+            metric_name = f'valid/mAP/{metric_name}'
+            self.log(metric_name, metric)
+
     def train_dataloader(self):
         return self.loader_train
+
+    def val_dataloader(self):
+        return self.loader_eval
 
     def configure_optimizers(self, ):
         optim_parameters = {
@@ -61,5 +82,12 @@ if __name__ == '__main__':
         experiment_name='effdet-lighning',
     )
     module = EfficientDetModule()
-    trainer = pl.Trainer(gpus=[7], gradient_clip_val=10, logger=neptune_logger)
+    trainer = pl.Trainer(gpus=[7],
+                         gradient_clip_val=10,
+                         logger=neptune_logger,
+                         limit_train_batches=4,
+                         limit_val_batches=90,
+                         log_every_n_steps=10,
+                         sync_batchnorm=True)
+
     trainer.fit(module)
