@@ -34,15 +34,12 @@ def create_datasets_and_loaders(args, model_config):
         fill_color=input_config['fill_color'],
         mean=input_config['mean'],
         std=input_config['std'],
-        num_workers=4,
+        num_workers=8,
         distributed=False,
-        pin_mem=False,
+        pin_mem=True,
         anchor_labeler=labeler,
     )
 
-    val_skip = 0
-    if val_skip > 1:
-        dataset_eval = SkipSubset(dataset_eval, val_skip)
     loader_eval = create_loader(
         dataset_eval,
         input_size=input_config['input_size'],
@@ -53,9 +50,9 @@ def create_datasets_and_loaders(args, model_config):
         fill_color=input_config['fill_color'],
         mean=input_config['mean'],
         std=input_config['std'],
-        num_workers=4,
+        num_workers=2,
         distributed=False,
-        pin_mem=False,
+        pin_mem=True,
         anchor_labeler=labeler,
     )
 
