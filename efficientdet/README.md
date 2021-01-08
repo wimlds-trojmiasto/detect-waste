@@ -1,6 +1,8 @@
-# EfficientDet (PyTorch) for waste detection
+# EfficientDet for waste detection (WIP)
 
-# Implementation
+This repository is still at early stage of development.
+
+# Implementation (PyTorch)
 A PyTorch EfficientDet for detecting waste using implementation from  [efficientdet-pytorch by rwightman](https://github.com/rwightman/efficientdet-pytorch)
 
 # Work in progress
