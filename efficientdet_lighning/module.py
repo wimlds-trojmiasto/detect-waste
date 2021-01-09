@@ -1,9 +1,9 @@
 from types import SimpleNamespace
-
+from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import NeptuneLogger
 from timm.optim import create_optimizer
-
+from pytorch_lightning.callbacks.gpu_stats_monitor import  GPUStatsMonitor
 from efficientdet_lighning.dataloader import create_datasets_and_loaders
 from efficientdet_lighning.efficientdet.factory import create_model
 
@@ -82,6 +82,8 @@ if __name__ == '__main__':
         project_name='detectwaste/efficientdet-lighning',
         experiment_name='effdet-lighning',
     )
+    gpu_monitor = GPUStatsMonitor()
+    lr_logger = LearningRateMonitor()
     module = EfficientDetModule()
     trainer = pl.Trainer(gpus=[0, 1, 2, 3, 4, 5, 6, 7],
                          accelerator='ddp',
@@ -93,6 +95,7 @@ if __name__ == '__main__':
                          log_every_n_steps=10,
                          sync_batchnorm=True,
                          max_epochs=50,
+                         callbacks=[gpu_monitor, lr_logger]
                          )
 
     trainer.fit(module)
