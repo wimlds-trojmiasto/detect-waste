@@ -24,7 +24,6 @@ class EfficientDetModule(pl.LightningModule):
             checkpoint_path='',
         )
         self.model_config = self.model.config
-        self.loader_train, self.loader_eval, self.evaluator = create_datasets_and_loaders({}, self.model_config)
 
     def forward(self, *args, **kwargs):
         output = self.model(*args, **kwargs)
@@ -57,9 +56,11 @@ class EfficientDetModule(pl.LightningModule):
     #         self.log(metric_name, metric)
 
     def train_dataloader(self):
+        self.loader_train, _, _ = create_datasets_and_loaders({}, self.model_config)
         return self.loader_train
 
     def val_dataloader(self):
+        _, self.loader_eval, _ = create_datasets_and_loaders({}, self.model_config)
         return self.loader_eval
 
     def configure_optimizers(self, ):
@@ -81,14 +82,18 @@ if __name__ == '__main__':
     #     experiment_name='effdet-lighning',
     # )
     module = EfficientDetModule()
-    trainer = pl.Trainer(gpus=[4, 5, 6, 7],
+    trainer = pl.Trainer(gpus=[0, 1, 2, 3, 4, 5, 6, 7],
                          accelerator='ddp',
+                         replace_sampler_ddp=False,
                          gradient_clip_val=10,
                          # logger=neptune_logger,
-                         # limit_train_batches=200,
-                         # limit_val_batches=90,
+                         # limit_train_batches=4 * 4 * 12,
+                         limit_val_batches=0,
                          # log_every_n_steps=10,
-                         # sync_batchnorm=True
+                         sync_batchnorm=True,
+                         max_epochs=1,
+                         profiler=True,
+                         precision=16,
                          )
 
     trainer.fit(module)

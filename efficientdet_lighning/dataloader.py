@@ -1,8 +1,6 @@
-import neptune
-
 from efficientdet_lighning.efficientdet.anchors import AnchorLabeler, Anchors
 from efficientdet_lighning.efficientdet.data import create_dataset, create_loader
-from efficientdet_lighning.efficientdet.data import resolve_input_config, SkipSubset
+from efficientdet_lighning.efficientdet.data import resolve_input_config
 from efficientdet_lighning.efficientdet.evaluator import create_evaluator
 from model import model_config
 
@@ -18,6 +16,8 @@ def create_datasets_and_loaders(args, model_config):
     if not bench_labeler:
         labeler = AnchorLabeler(
             Anchors.from_config(model_config), model_config.num_classes, match_threshold=0.5)
+
+    distributed_sampler = True
 
     loader_train = create_loader(
         dataset=dataset_train,
@@ -38,12 +38,13 @@ def create_datasets_and_loaders(args, model_config):
         distributed=False,
         pin_mem=True,
         anchor_labeler=labeler,
+        distributed_sampler=distributed_sampler
     )
 
     loader_eval = create_loader(
         dataset_eval,
         input_size=input_config['input_size'],
-        batch_size=4,
+        batch_size=8,
         is_training=False,
         use_prefetcher=True,
         interpolation=input_config['interpolation'],
@@ -51,9 +52,10 @@ def create_datasets_and_loaders(args, model_config):
         mean=input_config['mean'],
         std=input_config['std'],
         num_workers=2,
-        distributed=False,
+        distributed=True,
         pin_mem=True,
         anchor_labeler=labeler,
+        distributed_sampler=distributed_sampler
     )
 
     evaluator = create_evaluator('DetectwasteCfg', loader_eval.dataset,

@@ -165,6 +165,7 @@ def create_loader(
         distributed=False,
         pin_mem=False,
         anchor_labeler=None,
+        distributed_sampler=False,
 ):
     if isinstance(input_size, tuple):
         img_size = input_size[-2:]
@@ -191,7 +192,7 @@ def create_loader(
     dataset.transform = transform
 
     sampler = None
-    if distributed:
+    if distributed_sampler:
         if is_training:
             sampler = torch.utils.data.distributed.DistributedSampler(dataset)
         else:
