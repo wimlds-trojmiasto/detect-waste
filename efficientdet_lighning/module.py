@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import NeptuneLogger
 from timm.optim import create_optimizer
 
 from efficientdet_lighning.dataloader import create_datasets_and_loaders
@@ -33,7 +34,7 @@ class EfficientDetModule(pl.LightningModule):
         input, target = batch
         output = self.forward(input, target)
         loss = output['loss']
-        # self.log('train/loss', loss, sync_dist=True)
+        self.log('train/loss', loss, sync_dist=True)
         # TO DO model_ema
         return {'loss': loss}
 
@@ -41,26 +42,26 @@ class EfficientDetModule(pl.LightningModule):
         input, target = batch
         output = self.forward(input, target)
         loss = output['loss']
-        # self.log('val/loss', loss, sync_dist=True)
+        self.log('val/loss', loss, sync_dist=True)
         return {'val_loss': loss,
                 'detections': output['detections'],
                 'target': target}
 
-    # def validation_epoch_end(self, outputs):
-    #     for batch in outputs:
-    #         self.evaluator.add_predictions(batch['detections'], batch['target'])
-    #     metrics = self.evaluator.evaluate()
-    #     for key, metric in metrics.items():
-    #         metric_name = key.split('/')[-1]
-    #         metric_name = f'valid/mAP/{metric_name}'
-    #         self.log(metric_name, metric)
+    def validation_epoch_end(self, outputs):
+        for batch in outputs:
+            self.evaluator.add_predictions(batch['detections'], batch['target'])
+        metrics = self.evaluator.evaluate()
+        for key, metric in metrics.items():
+            metric_name = key.split('/')[-1]
+            metric_name = f'valid/mAP/{metric_name}'
+            self.log(metric_name, metric, sync_dist=True)
 
     def train_dataloader(self):
         self.loader_train, _, _ = create_datasets_and_loaders({}, self.model_config)
         return self.loader_train
 
     def val_dataloader(self):
-        _, self.loader_eval, _ = create_datasets_and_loaders({}, self.model_config)
+        _, self.loader_eval, self.evaluator = create_datasets_and_loaders({}, self.model_config)
         return self.loader_eval
 
     def configure_optimizers(self, ):
@@ -77,23 +78,21 @@ class EfficientDetModule(pl.LightningModule):
 
 
 if __name__ == '__main__':
-    # neptune_logger = NeptuneLogger(
-    #     project_name='detectwaste/efficientdet-lighning',
-    #     experiment_name='effdet-lighning',
-    # )
+    neptune_logger = NeptuneLogger(
+        project_name='detectwaste/efficientdet-lighning',
+        experiment_name='effdet-lighning',
+    )
     module = EfficientDetModule()
     trainer = pl.Trainer(gpus=[0, 1, 2, 3, 4, 5, 6, 7],
                          accelerator='ddp',
                          replace_sampler_ddp=False,
                          gradient_clip_val=10,
-                         # logger=neptune_logger,
+                         logger=neptune_logger,
                          # limit_train_batches=4 * 4 * 12,
-                         limit_val_batches=0,
-                         # log_every_n_steps=10,
+                         # limit_val_batches=0,
+                         log_every_n_steps=10,
                          sync_batchnorm=True,
-                         max_epochs=1,
-                         profiler=True,
-                         precision=16,
+                         max_epochs=50,
                          )
 
     trainer.fit(module)

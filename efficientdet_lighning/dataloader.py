@@ -22,7 +22,7 @@ def create_datasets_and_loaders(args, model_config):
     loader_train = create_loader(
         dataset=dataset_train,
         input_size=input_config['input_size'],
-        batch_size=4,
+        batch_size=3,
         is_training=True,
         use_prefetcher=True,
         re_prob=0.2,
