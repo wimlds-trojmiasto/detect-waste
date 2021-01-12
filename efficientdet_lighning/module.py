@@ -1,9 +1,11 @@
 from types import SimpleNamespace
-from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
+
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks.gpu_stats_monitor import GPUStatsMonitor
+from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
 from pytorch_lightning.loggers import NeptuneLogger
 from timm.optim import create_optimizer
-from pytorch_lightning.callbacks.gpu_stats_monitor import  GPUStatsMonitor
+
 from efficientdet_lighning.dataloader import create_datasets_and_loaders
 from efficientdet_lighning.efficientdet.factory import create_model
 

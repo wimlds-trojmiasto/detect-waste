@@ -2,7 +2,6 @@ from efficientdet_lighning.efficientdet.anchors import AnchorLabeler, Anchors
 from efficientdet_lighning.efficientdet.data import create_dataset, create_loader
 from efficientdet_lighning.efficientdet.data import resolve_input_config
 from efficientdet_lighning.efficientdet.evaluator import create_evaluator
-from model import model_config
 
 
 def create_datasets_and_loaders(args, model_config):
@@ -62,9 +61,3 @@ def create_datasets_and_loaders(args, model_config):
                                  distributed=False, pred_yxyx=False)
 
     return loader_train, loader_eval, evaluator
-
-
-if __name__ == '__main__':
-    args = {}
-    output = create_datasets_and_loaders(args, model_config)
-    print('sdfsdf')
