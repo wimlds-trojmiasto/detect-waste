@@ -4,6 +4,7 @@ Hacked together by Ross Wightman
 """
 import torch.utils.data as data
 import numpy as np
+import albumentations as A
 
 from PIL import Image
 from .parsers import create_parser
