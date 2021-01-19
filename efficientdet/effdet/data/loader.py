@@ -4,6 +4,7 @@ Hacked together by / Copyright 2020 Ross Wightman
 """
 import torch.utils.data
 from .transforms import *
+from .transforms_albumentation import get_transform
 from .random_erasing import RandomErasing
 from effdet.anchors import AnchorLabeler
 from timm.data.distributed_sampler import OrderedDistributedSampler
@@ -177,13 +178,16 @@ def create_loader(
         img_size = input_size
 
     if is_training:
-        transform = transforms_coco_train(
-            img_size,
-            interpolation=interpolation,
-            use_prefetcher=use_prefetcher,
-            fill_color=fill_color,
-            mean=mean,
-            std=std)
+        #Previous transformation
+        #transform = transforms_coco_train(
+        #    img_size,
+        #    interpolation=interpolation,
+        #    use_prefetcher=use_prefetcher,
+        #    fill_color=fill_color,
+        #    mean=mean,
+        #    std=std)
+        #New transformation
+        transform = get_transform()
     else:
         transform = transforms_coco_eval(
             img_size,
