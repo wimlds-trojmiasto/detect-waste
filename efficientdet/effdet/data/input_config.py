@@ -10,18 +10,8 @@ def resolve_input_config(args, model_config=None, model=None):
 
     # Resolve input/image size
     in_chans = 3
-    # if 'chans' in args and args['chans'] is not None:
-    #     in_chans = args['chans']
-
     input_size = (in_chans, 512, 512)
-    # if 'input_size' in args and args['input_size'] is not None:
-    #     assert isinstance(args['input_size'], (tuple, list))
-    #     assert len(args['input_size']) == 3
-    #     input_size = tuple(args['input_size'])
-    #     in_chans = input_size[0]  # input_size overrides in_chans
-    # elif 'img_size' in args and args['img_size'] is not None:
-    #     assert isinstance(args['img_size'], int)
-    #     input_size = (in_chans, args['img_size'], args['img_size'])
+
     if 'input_size' in model_config:
         input_size = tuple(model_config['input_size'])
     elif 'image_size' in model_config:

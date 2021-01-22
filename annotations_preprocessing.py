@@ -37,7 +37,10 @@ def get_args_parser():
     parser.add_argument('--test_split',
                         help='fraction of dataset for test',
                         default=0.2,
-                        type=str)
+                        type=str)   
+    parser.add_argument('--binary',
+                        help='prepare binary (single class) annotations',
+                        action='store_true')
     return parser
 
 
@@ -50,18 +53,26 @@ if __name__ == '__main__':
         os.mkdir(os.path.dirname(args.detectwaste_dest))
 
     # first, move all category ids from taco annotation style (60 categories)
-    # to detectwaste (7 categories)
+    # to detectwaste (7 categories) or binary (1 category)
     taco_categories_to_detectwaste(source=args.taco_source,
-                                   dest=args.detectwaste_dest)
-    # convert form epi to taco
-    convert_dataset(args.detectwaste_dest, args.epi_source, args.epi_dest)
-
-    # now you can both taco and epinote in the training
-    # at first, you can try using detectwaste_dest annotations for train_set
-    # and epi_dest annotations for validation
+                                   dest=args.detectwaste_dest,
+                                   binary=args.binary)
+    # convert from epi to detectwaste or binary
+    if args.binary:
+        taco_categories_to_detectwaste(source=args.epi_source,
+                                   dest=args.epi_dest,
+                                   binary=args.binary)
+    else:
+        convert_dataset(args.detectwaste_dest, args.epi_source, args.epi_dest)
 
     # split files into train and test files
     list_of_datasets = [args.detectwaste_dest, args.epi_dest]
-    split_coco_dataset(list_of_datasets,
-                       args.split_dest,
-                       args.test_split)
+    if args.binary:
+        split_coco_dataset(list_of_datasets,
+                        args.split_dest,
+                        args.test_split,
+                        mode = 'binary')
+    else:
+        split_coco_dataset(list_of_datasets,
+                        args.split_dest,
+                        args.test_split)
