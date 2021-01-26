@@ -6,7 +6,8 @@ import os
 
 # update all annotations in one run
 from utils.dataset_converter import convert_dataset, \
-                                    taco_categories_to_detectwaste
+                                    taco_categories_to_detectwaste, \
+                                    convert_to_binary
 from utils.split_coco_dataset import split_coco_dataset
 
 
@@ -38,9 +39,6 @@ def get_args_parser():
                         help='fraction of dataset for test',
                         default=0.2,
                         type=str)   
-    parser.add_argument('--binary',
-                        help='prepare binary (single class) annotations',
-                        action='store_true')
     return parser
 
 
@@ -53,26 +51,23 @@ if __name__ == '__main__':
         os.mkdir(os.path.dirname(args.detectwaste_dest))
 
     # first, move all category ids from taco annotation style (60 categories)
-    # to detectwaste (7 categories) or binary (1 category)
+    # to detectwaste (7 categories)
     taco_categories_to_detectwaste(source=args.taco_source,
-                                   dest=args.detectwaste_dest,
-                                   binary=args.binary)
-    # convert from epi to detectwaste or binary
-    if args.binary:
-        taco_categories_to_detectwaste(source=args.epi_source,
-                                   dest=args.epi_dest,
-                                   binary=args.binary)
-    else:
-        convert_dataset(args.detectwaste_dest, args.epi_source, args.epi_dest)
+                                   dest=args.detectwaste_dest)
+    # convert from epi to detectwaste
+    convert_dataset(args.detectwaste_dest, args.epi_source, args.epi_dest)
 
     # split files into train and test files
+    # if you want to concat more datasets simply 
+    # add path to datasets to the list below
     list_of_datasets = [args.detectwaste_dest, args.epi_dest]
-    if args.binary:
-        split_coco_dataset(list_of_datasets,
-                        args.split_dest,
-                        args.test_split,
-                        mode = 'binary')
-    else:
-        split_coco_dataset(list_of_datasets,
+
+    split_coco_dataset(list_of_datasets,
                         args.split_dest,
                         args.test_split)
+
+    # convert all annotations to binary to preserve original split
+    convert_to_binary(source=args.split_dest+'_train.json',
+                        dest=args.split_dest+'_binary_train.json')
+    convert_to_binary(source=args.split_dest+'_test.json',
+                        dest=args.split_dest+'_binary_test.json')

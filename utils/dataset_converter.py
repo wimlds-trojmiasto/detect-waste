@@ -1,61 +1,58 @@
 import json
 
-def taco_to_detectwaste(label, binary = False):
+def taco_to_detectwaste(label):
     # converts taco categories names to detectwaste
-    if binary:
-        label = "litter"
+    glass = ["Glass bottle", "Broken glass", "Glass jar"]
+    metals_and_plastic = ["Aluminium foil", "Clear plastic bottle",
+                        "Other plastic bottle", "Plastic bottle cap",
+                        "Metal bottle cap", "Aerosol", "Drink can",
+                        "Food can", "Drink carton",
+                        "Disposable plastic cup",
+                        "Other plastic cup", "Plastic lid", "Metal lid",
+                        "Single-use carrier bag", "Polypropylene bag",
+                        "Plastic Film", "Six pack rings", "Spread tub",
+                        "Tupperware", "Disposable food container",
+                        "Other plastic container", "Plastic glooves",
+                        "Plastic utensils", "Pop tab", "Scrap metal",
+                        "Plastic straw", "Other plastic", "Plastic film",
+                        "Food Can", "Crisp packet"]
+
+    non_recyclable = ["Aluminium blister pack", "Carded blister pack",
+                    "Meal carton", "Pizza box", "Cigarette",
+                    "Paper cup", "Meal carton", "Foam cup",
+                    "Glass cup", "Wrapping paper",
+                    "Magazine paper", "Garbage bag",
+                    "Plastified paper bag",
+                    "Other plastic wrapper", "Foam food container",
+                    "Rope", "Shoe", "Squeezable tube", "Paper straw",
+                    "Styrofoam piece", "Rope & strings", "Tissues"]
+
+    other = ["Battery"]
+    paper = ["Corrugated carton", "Egg carton", "Toilet tube",
+            "Other carton", "Normal paper", "Paper bag"]
+    bio = ["Food waste"]
+    unknown = ["Unlabeled litter"]
+
+    if (label in glass):
+        label = "glass"
+    elif (label in metals_and_plastic):
+        label = "metals_and_plastic"
+    elif(label in non_recyclable):
+        label = "non_recyclable"
+    elif(label in other):
+        label = "other"
+    elif (label in paper):
+        label = "paper"
+    elif(label in bio):
+        label = "bio"
+    elif(label in unknown):
+        label = "unknown"
     else:
-        glass = ["Glass bottle", "Broken glass", "Glass jar"]
-        metals_and_plastic = ["Aluminium foil", "Clear plastic bottle",
-                            "Other plastic bottle", "Plastic bottle cap",
-                            "Metal bottle cap", "Aerosol", "Drink can",
-                            "Food can", "Drink carton",
-                            "Disposable plastic cup",
-                            "Other plastic cup", "Plastic lid", "Metal lid",
-                            "Single-use carrier bag", "Polypropylene bag",
-                            "Plastic Film", "Six pack rings", "Spread tub",
-                            "Tupperware", "Disposable food container",
-                            "Other plastic container", "Plastic glooves",
-                            "Plastic utensils", "Pop tab", "Scrap metal",
-                            "Plastic straw", "Other plastic", "Plastic film",
-                            "Food Can", "Crisp packet"]
-
-        non_recyclable = ["Aluminium blister pack", "Carded blister pack",
-                        "Meal carton", "Pizza box", "Cigarette",
-                        "Paper cup", "Meal carton", "Foam cup",
-                        "Glass cup", "Wrapping paper",
-                        "Magazine paper", "Garbage bag",
-                        "Plastified paper bag",
-                        "Other plastic wrapper", "Foam food container",
-                        "Rope", "Shoe", "Squeezable tube", "Paper straw",
-                        "Styrofoam piece", "Rope & strings", "Tissues"]
-
-        other = ["Battery"]
-        paper = ["Corrugated carton", "Egg carton", "Toilet tube",
-                "Other carton", "Normal paper", "Paper bag"]
-        bio = ["Food waste"]
-        unknown = ["Unlabeled litter"]
-
-        if (label in glass):
-            label = "glass"
-        elif (label in metals_and_plastic):
-            label = "metals_and_plastic"
-        elif(label in non_recyclable):
-            label = "non_recyclable"
-        elif(label in other):
-            label = "other"
-        elif (label in paper):
-            label = "paper"
-        elif(label in bio):
-            label = "bio"
-        elif(label in unknown):
-            label = "unknown"
-        else:
-            print(label, "is non-taco label")
-            label = "unknown"
+        print(label, "is non-taco label")
+        label = "unknown"
     return label
 
-def taco_categories_to_detectwaste(source, dest, binary = False):
+def taco_categories_to_detectwaste(source, dest):
     # function that updates taco annotations to detectwaste categories
     # from sixty categories to glass, metals_and_plastics, non_recyclable
     # other, paper, bio, unknown
@@ -68,10 +65,7 @@ def taco_categories_to_detectwaste(source, dest, binary = False):
     info = dataset['info']
 
     # update info about dataset
-    if binary:
-        info['description'] = 'detectwaste_binary'
-    else:
-        info['description'] = 'detectwaste'
+    info['description'] = 'detectwaste'
     info['year'] = 2021
 
     # change supercategories and categories from taco to detectwaste
@@ -80,14 +74,14 @@ def taco_categories_to_detectwaste(source, dest, binary = False):
         cat_id = ann['category_id']
         cat_taco = categories[cat_id-1]['name']
         detectwaste_categories[cat_id-1]['supercategory'] = \
-            taco_to_detectwaste(cat_taco, binary)
+            taco_to_detectwaste(cat_taco)
 
     # bug fix: As there is no representation of
     # "Plastified paper bag" in annotated data,
     # change of this supercategory was done manually.
     try:
         detectwaste_categories[34]['supercategory'] = \
-            taco_to_detectwaste("Plastified paper bag", binary)
+            taco_to_detectwaste("Plastified paper bag")
     except:
         print("no plastified paper bag category, ignoring removal")
         
@@ -121,11 +115,10 @@ def taco_categories_to_detectwaste(source, dest, binary = False):
             detectwaste_categories[cat_id]['supercategory']
 
     anns = anns_detectwaste
-
-    dataset['categories'] = [cat for cat in dataset['categories']
-                             if cat['id'] < len(detectwaste_ids)]
-
+    
     for cat, items in zip(dataset['categories'], detectwaste_ids.items()):
+        dataset['categories'] = [cat for cat in dataset['categories']
+                        if cat['id'] < len(detectwaste_ids)]
         category, id = items
         cat['name'] = category
         cat['supercategory'] = category
@@ -135,7 +128,32 @@ def taco_categories_to_detectwaste(source, dest, binary = False):
     with open(dest, 'w') as f:
         json.dump(dataset, f)
     print('Finished converting ids. New ids:', detectwaste_ids)
+    
+def convert_to_binary(source, dest):
+    with open(source, 'r') as f:
+        dataset = json.loads(f.read())
+   
+    anns = dataset['annotations']
+    info = dataset['info']
 
+    # update info about dataset
+    info['description'] = 'detectwaste_binary'
+    info['year'] = 2021
+    
+    # update categories
+    categories = dict()
+    categories['name'] = 'litter'
+    categories['category'] = 'litter'
+    categories['id'] = 1
+    dataset['categories'] = [categories]
+    
+    for i, ann in enumerate(anns):
+        anns[i]['category_id'] = int(categories['id'])      
+    
+    with open(dest, 'w') as f:
+        json.dump(dataset, f)
+    print('Finished converting ids. New ids:', dataset['categories'])
+        
 def convert_dataset(annotations_template_path,
                     annotations_to_convert_path,
                     save_path):
