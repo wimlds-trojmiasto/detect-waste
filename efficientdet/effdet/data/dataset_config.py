@@ -28,6 +28,14 @@ class TACOCfg(CocoCfg):
 class DetectwasteCfg(CocoCfg):
     variant: str = '2017'
     splits: Dict[str, dict] = field(default_factory=lambda: dict(
-        val=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_train.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
-        train=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_test.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
+        train=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_train.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_test.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
+    ))
+    
+@dataclass
+class BinaryCfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        train=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_binary_train.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_binary_test.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
     ))

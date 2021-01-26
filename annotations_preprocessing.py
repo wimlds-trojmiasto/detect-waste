@@ -6,7 +6,8 @@ import os
 
 # update all annotations in one run
 from utils.dataset_converter import convert_dataset, \
-                                    taco_categories_to_detectwaste
+                                    taco_categories_to_detectwaste, \
+                                    convert_to_binary
 from utils.split_coco_dataset import split_coco_dataset
 
 
@@ -37,7 +38,7 @@ def get_args_parser():
     parser.add_argument('--test_split',
                         help='fraction of dataset for test',
                         default=0.2,
-                        type=str)
+                        type=str)   
     return parser
 
 
@@ -53,15 +54,20 @@ if __name__ == '__main__':
     # to detectwaste (7 categories)
     taco_categories_to_detectwaste(source=args.taco_source,
                                    dest=args.detectwaste_dest)
-    # convert form epi to taco
+    # convert from epi to detectwaste
     convert_dataset(args.detectwaste_dest, args.epi_source, args.epi_dest)
 
-    # now you can both taco and epinote in the training
-    # at first, you can try using detectwaste_dest annotations for train_set
-    # and epi_dest annotations for validation
-
     # split files into train and test files
+    # if you want to concat more datasets simply 
+    # add path to datasets to the list below
     list_of_datasets = [args.detectwaste_dest, args.epi_dest]
+
     split_coco_dataset(list_of_datasets,
-                       args.split_dest,
-                       args.test_split)
+                        args.split_dest,
+                        args.test_split)
+
+    # convert all annotations to binary to preserve original split
+    convert_to_binary(source=args.split_dest+'_train.json',
+                        dest=args.split_dest+'_binary_train.json')
+    convert_to_binary(source=args.split_dest+'_test.json',
+                        dest=args.split_dest+'_binary_test.json')

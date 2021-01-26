@@ -34,6 +34,9 @@ A PyTorch EfficientDet for detecting waste using implementation from  [efficient
     ` python3 annotations_preprocessing.py `
 
     new annotations will be saved in *annotations/annotations_train.json* and *annotations/annotations_test.json*
+* for single class detection run
+
+    ` python3 annotations_preprocessing.py --binary --split_dest 'annotations/binary_annotations'`
 
 ### Dataset config
 * dataset config should be set in *efficientdet/effdet/data/dataset_config.py*
@@ -47,6 +50,7 @@ A PyTorch EfficientDet for detecting waste using implementation from  [efficient
         train=dict(ann_filename=PATH_TO_YOUR_JSON_TRAIN_ANNOTATIONS, img_dir=PATH_TO_YOUR_TRAIN_DATA, has_labels=True),
     ))`
 
+    If you plan to train on single class remember to use single class configuration.
 
 # Training
 
@@ -61,6 +65,13 @@ Example run:
         --model tf_efficientdet_d2 --batch-size 4 --decay-rate 0.95 \
         --lr .001 --workers 4 --warmup-epochs 5 --model-ema --dataset DetectwasteCfg \
         --pretrained --num-classes 7 --color-jitter 0.1 --reprob 0.2 --epochs 200 `
+
+    For single class:
+
+    `python3 efficientdet/train.py "/dih4/dih4_2/wimlds/data/" \
+    --model tf_efficientdet_d2 --batch-size 4 --decay-rate 0.95 \
+    --lr .001 --workers 4 --warmup-epochs 5 --model-ema --dataset binary \
+    --pretrained --num-classes 1 --color-jitter 0.1 --reprob 0.2 --epochs 200 `
 
 ### Training customization
 
