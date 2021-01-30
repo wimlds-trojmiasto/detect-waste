@@ -230,12 +230,12 @@ def main():
     args.distributed = False
     if 'WORLD_SIZE' in os.environ:
         args.distributed = int(os.environ['WORLD_SIZE']) > 1
-    args.device = 'cuda:7'
+    args.device = 'cuda:1'
     args.world_size = 4
     args.rank = 4 # global rank
     args.GPUs = [4, 5, 6, 7]
     torch.cuda.empty_cache()
-    
+    torch.cuda.set_device(args.device)
     if args.distributed:
         args.device = 'cuda:%d' % args.GPUs[args.local_rank] 
         torch.cuda.set_device(args.device)
@@ -293,7 +293,7 @@ def main():
     if args.local_rank == 0:
         logging.info('Model %s created, param count: %d' % (args.model, sum([m.numel() for m in model.parameters()])))
 
-    model.cuda()
+    model.to(args.device)
     if args.channels_last:
         model = model.to(memory_format=torch.channels_last)
 
@@ -307,7 +307,7 @@ def main():
         if args.local_rank == 0:
             logging.info('Using NVIDIA APEX AMP. Training in mixed precision.')
     elif use_amp == 'native':
-        amp_autocast = torch.cuda.amp.autocast
+        amp_autocast = torch.cuda.amp.autocast.to(args.device)
         loss_scaler = NativeScaler()
         if args.local_rank == 0:
             logging.info('Using native Torch AMP. Training in mixed precision.')
