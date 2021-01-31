@@ -3,6 +3,7 @@ Script to prepare annotation for litter detection task.
 '''
 import argparse
 import os
+import numpy as np
 
 # update all annotations in one run
 from utils.dataset_converter import convert_dataset, \
@@ -45,6 +46,7 @@ def get_args_parser():
 if __name__ == '__main__':
     parser = get_args_parser()
     args = parser.parse_args()
+    np.random.seed(2020)
 
     # create directory to store all annotations
     if not os.path.exists(os.path.dirname(args.detectwaste_dest)):
