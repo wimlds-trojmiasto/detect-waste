@@ -61,7 +61,8 @@ if __name__ == '__main__':
     # if you want to concat more datasets simply
     # add path to datasets to the list below
     list_of_datasets = [args.detectwaste_dest,
-                        args.epi_dest]
+                        args.epi_dest,
+                        ]
 
     split_coco_dataset(list_of_datasets,
                        args.split_dest,

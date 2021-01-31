@@ -199,6 +199,26 @@ def convert_dataset(annotations_template_path,
 
     print('Finished converting dataset')
 
+def renumerate_image_ids(dataset):
+    anns = dataset['annotations']
+    imgs = dataset['images']
+    
+    found = False
+    counter = 0
+    for im in imgs:
+        for i, ann in enumerate(anns):
+            if ann['image_id'] == im['id']:
+                ann['image_id'] = counter
+                ann['id'] = i
+                found = True
+        if found:
+            im['id'] = counter
+            found = False   
+            counter += 1
+    
+    dataset['annotations'] = anns
+    dataset['images'] = imgs
+    return dataset
 
 def concatenate_datasets(list_of_datasets, dest=None):
     # concatenate list of datasets into one single file
@@ -210,7 +230,8 @@ def concatenate_datasets(list_of_datasets, dest=None):
     for i, annot in enumerate(list_of_datasets):
         with open(annot, 'r') as f:
             dataset = json.loads(f.read())
-
+            
+        dataset = renumerate_image_ids(dataset)    
         anns = dataset['annotations'].copy()
         images = dataset['images'].copy()
 
