@@ -1,4 +1,4 @@
-python3 split_coco_dataset.py --dataset_dest \
+python3 annotations_preprocessing_multi.py --dataset_dest \
         /dih4/dih4_2/wimlds/data/TrashCan_v1/material_version/instances_all_trashcan.json \
         /dih4/dih4_2/wimlds/data/uavvaste/annotations.json \
         /dih4/dih4_2/wimlds/data/drinkwaste_coco.json \

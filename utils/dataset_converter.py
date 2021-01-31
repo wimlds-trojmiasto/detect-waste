@@ -199,55 +199,41 @@ def convert_dataset(annotations_template_path,
 
     print('Finished converting dataset')
 
-def renumerate_image_ids(dataset):
-    anns = dataset['annotations']
-    imgs = dataset['images']
-    
-    found = False
-    counter = 0
-    for im in imgs:
-        for i, ann in enumerate(anns):
-            if ann['image_id'] == im['id']:
-                ann['image_id'] = counter
-                ann['id'] = i
-                found = True
-        if found:
-            im['id'] = counter
-            found = False   
-            counter += 1
-    
-    dataset['annotations'] = anns
-    dataset['images'] = imgs
-    return dataset
 
 def concatenate_datasets(list_of_datasets, dest=None):
     # concatenate list of datasets into one single file
     # the first dataset in the list will be used as a base
     # and the rest of datasets will be appended
-    last_id = 0
-    last_im_id = None
-    concat_dataset = None
+    last_ann_id = 0
+    last_im_id = 0
+    concat_dataset = {}
+    concat_dataset['images'] = []
+    concat_dataset['annotations'] = []
+
     for i, annot in enumerate(list_of_datasets):
         with open(annot, 'r') as f:
             dataset = json.loads(f.read())
-            
-        dataset = renumerate_image_ids(dataset)    
+
         anns = dataset['annotations'].copy()
         images = dataset['images'].copy()
 
-        if last_id > 0:
-            for ann in anns:
-                ann['id'] += last_id
-                ann['image_id'] += last_im_id
-            for im in images:
-                im['id'] += last_im_id
-            concat_dataset['images'] += images
-            concat_dataset['annotations'] += anns
-        else:
-            concat_dataset = dataset.copy()
+        img_dict = {}
+        for im in images:
+            img_dict[im['id']] = last_im_id
+            im['id'] = last_im_id
+            last_im_id += 1
 
-        last_id = len(anns)
-        last_im_id = len(images)
+        for ann in dataset['annotations']:
+            ann['image_id'] = img_dict[ann['image_id']]
+            ann['id'] = last_ann_id
+            last_ann_id += 1
+
+        concat_dataset['images'] += images
+        concat_dataset['annotations'] += anns
+
+    concat_dataset['info'] = dataset['info']
+    concat_dataset['licenses'] = dataset['licenses']
+    concat_dataset['categories'] = dataset['categories']
 
     print("Concatenated ", len(concat_dataset['annotations']), "bboxes,",
           len(concat_dataset['images']), "images in total.")
