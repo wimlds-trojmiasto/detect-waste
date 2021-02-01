@@ -263,7 +263,6 @@ def transforms_coco_train(
     fill_color = resolve_fill_color(fill_color, mean)
 
     image_tfl = [
-        RandomFlip(horizontal=True, prob=0.5),
         RandomResizePad(
             target_size=img_size, interpolation=interpolation, fill_color=fill_color),
         ImageToNumpy(),

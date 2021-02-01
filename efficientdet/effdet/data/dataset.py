@@ -5,6 +5,7 @@ Hacked together by Ross Wightman
 import torch.utils.data as data
 import numpy as np
 import albumentations as A
+import torch
 
 from PIL import Image
 from .parsers import create_parser
@@ -19,7 +20,7 @@ class DetectionDatset(data.Dataset):
 
     """
 
-    def __init__(self, data_dir, parser=None, parser_kwargs=None, transform=None):
+    def __init__(self, data_dir, parser=None, parser_kwargs=None, transform=None, transforms=None):
         super(DetectionDatset, self).__init__()
         parser_kwargs = parser_kwargs or {}
         self.data_dir = data_dir
@@ -29,6 +30,7 @@ class DetectionDatset(data.Dataset):
             assert parser is not None and len(parser.img_ids)
             self._parser = parser
         self._transform = transform
+        self._transforms = transforms
 
     def __getitem__(self, index):
         """
@@ -45,6 +47,14 @@ class DetectionDatset(data.Dataset):
 
         img_path = self.data_dir / img_info['file_name']
         img = Image.open(img_path).convert('RGB')
+
+        if self.transforms is not None:         
+            transformed = self.transforms(image=np.asarray(img), bbox_classes=target['cls'], bbox=target['bbox'])
+            img = transformed['image']
+            img = Image.fromarray(img.astype('uint8'), 'RGB')
+            target['bbox'] = transformed['bbox']
+            target['cls'] = transformed['bbox_classes']
+            target['img_size'] = img.size
         if self.transform is not None:
             img, target = self.transform(img, target)
 
