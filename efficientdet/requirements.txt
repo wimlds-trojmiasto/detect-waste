@@ -8,3 +8,5 @@ numpy
 pycocotools>=2.0.2
 
 omegaconf>=2.0
+
+albumentations>=0.5.2

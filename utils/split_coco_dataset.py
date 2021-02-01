@@ -5,6 +5,9 @@ import numpy as np
 from collections import defaultdict, Counter
 from utils.dataset_converter import concatenate_datasets
 from iterstrat.ml_stratifiers import MultilabelStratifiedShuffleSplit
+import argparse
+
+from utils.dataset_converter import convert_to_binary
 
 
 # filter_annotations and save_coco on akarazniewicz/cocosplit
@@ -16,13 +19,15 @@ def filter_annotations(annotations, images):
 
 def save_coco(dest, info, licenses,
               images, annotations, categories):
+    data_dict = {'info': info,
+                 'licenses': licenses,
+                 'images': images,
+                 'annotations': annotations,
+                 'categories': categories}
     with open(dest, 'w') as f:
-        json.dump({'info': info,
-                   'licenses': licenses,
-                   'images': images,
-                   'annotations': annotations,
-                   'categories': categories},
+        json.dump(data_dict,
                   f, indent=2, sort_keys=True)
+    return data_dict
 
 
 def PseudoStratifiedShuffleSplit(images,
@@ -106,15 +111,25 @@ def split_coco_dataset(list_of_datasets_to_split,
                                          int(ann['image_id']), annotations)
     images = funcy.lremove(lambda i: i['id'] not in
                            images_with_annotations, images)
-    if mode == 'multi':
-        x, y = MultiStratifiedShuffleSplit(images, annotations, test_size)
-    else:
-        x, y = PseudoStratifiedShuffleSplit(images, annotations, test_size)
 
-    save_coco(dest+'_train.json', info, licenses,
-              x, filter_annotations(annotations, x), categories)
-    save_coco(dest+'_test.json', info, licenses, y,
-              filter_annotations(annotations, y), categories)
+    if len(dataset['categories']) == 1:
+        np.random.shuffle(images)
+        x = images[int(len(images) * test_size):]
+        y = images[0:int(len(images) * test_size)]
+        print('Train:', len(x), 'images, valid:', len(y))
+    else:
+        if mode == 'multi':
+            x, y = MultiStratifiedShuffleSplit(images, annotations, test_size)
+        else:
+            x, y = PseudoStratifiedShuffleSplit(images, annotations, test_size)
+
+    train = save_coco(dest+'_train.json', info, licenses,
+                      x, filter_annotations(annotations, x), categories)
+    test = save_coco(dest+'_test.json', info, licenses, y,
+                     filter_annotations(annotations, y), categories)
 
     print('Finished stratified shuffle split. Results saved in:',
           dest + '_train.json', dest + '_test.json')
+    return train, test
+
+

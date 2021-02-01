@@ -5,13 +5,78 @@ www.detectwaste.ml
 ## Data download (WIP)
 * TACO bboxes - in progress. TACO dataset can be downloaded (http://tacodataset.org/)[here]. TACO bboxes will be avaiable for download soon.
 
+    Clone Taco repository
+        `git clone https://github.com/pedropro/TACO.git`
+
+    Install requirements
+        `pip3 install -r requirements.txt`
+
+    Download annotated data
+        `python3 download.py`
+
+* [UAVVaste](https://github.com/UAVVaste/UAVVaste)
+
+    Clone UAVVaste repository
+        `git clone https://github.com/UAVVaste/UAVVaste.git`
+    
+    Install requirements
+        `pip3 install -r requirements.txt`
+    
+    Download annotated data
+        `python3 main.py`
+
+* [TrashCan 1.0](https://conservancy.umn.edu/handle/11299/214865)
+
+    Download directly from web
+    `wget https://conservancy.umn.edu/bitstream/handle/11299/214865/dataset.zip?sequence=12&isAllowed=y`
+
+* [TrashICRA](https://conservancy.umn.edu/handle/11299/214366)
+
+    Download directly from web
+    `wget https://conservancy.umn.edu/bitstream/handle/11299/214366/trash_ICRA19.zip?sequence=12&isAllowed=y`
+
+* [MJU-Waste](https://github.com/realwecan/mju-waste/) 
+
+    Download directly from [google drive](https://drive.google.com/file/d/1o101UBJGeeMPpI-DSY6oh-tLk9AHXMny/view)
+
+* [Drinking Waste Classification](https://www.kaggle.com/arkadiyhacks/drinking-waste-classification)
+
+    In order to download you must first authenticate using a kaggle API token. Read about it [here](https://www.kaggle.com/docs/api#getting-started-installation-&-authentication)
+
+    `kaggle datasets download -d arkadiyhacks/drinking-waste-classification`
+
+
+For more datasets check: [waste-datasets-review](https://github.com/AgaMiko/waste-datasets-review)
+
 ## Data preprocessing
+
+### Multiclass training
+To train only on TACO dataset with detect-waste classes:
 * run *annotations_preprocessing.py*
 
     `python3 annotations_preprocessing.py`
 
     new annotations will be saved in *annotations/annotations_train.json* and *annotations/annotations_test.json*
+
+### Single class training
+
+To train on one or multiple datasets on a single class:
+
+* run *annotations_preprocessing_multi.py*
+
+    `python3 annotations_preprocessing_multi.py`
+
+    new annotations will be split and saved in *annotations/binary_mixed_train.json* and *annotations/binary_mixed_test.json*
+
+    Example bash file is in **annotations_preprocessing_multi.sh** and can be run by
+
+    `bash annotations_preprocessing_multi.sh`
+
+Script will automaticlly split all datasets to train and test set with MultilabelStratifiedShuffleSplit. Then it will convert datasets to one class - litter. Finally all datasets will be concatenated to form single train and test files *annotations/binary_mixed_train.json* and *annotations/binary_mixed_test.
+
 # Models
+
+To read more about waste detection check [litter-detection-review](https://github.com/majsylw/litter-detection-review)
 
 * ### Efficientdet (WIP)
 

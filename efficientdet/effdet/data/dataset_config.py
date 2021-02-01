@@ -39,3 +39,58 @@ class BinaryCfg(CocoCfg):
         train=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_binary_train.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
         val=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/annotations_binary_test.json', img_dir='/dih4/dih4_2/wimlds/data/', has_labels=True),
     ))
+
+@dataclass
+class BinaryMultiCfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        train=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/binary_mixed_train.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/binary_mixed_test.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+    ))
+
+@dataclass
+class TrashCanCfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        train=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations0_train.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations0_test.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+    ))
+
+@dataclass
+class UVVasteCfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        train=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations1_train.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations1_test.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+    ))
+
+@dataclass
+class ICRACfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        train=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations5_train.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations5_test.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+    ))
+
+@dataclass
+class DrinkWasteCfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        train=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations2_train.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations2_test.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+    ))
+
+@dataclass
+class MJU_WasteCfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        train=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations3_train.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations3_test.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+    ))
+@dataclass
+class WadeCfg(CocoCfg):
+    variant: str = '2017'
+    splits: Dict[str, dict] = field(default_factory=lambda: dict(
+        train=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations4_train.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+        val=dict(ann_filename='/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations4_test.json', img_dir='/dih4/dih4_2/wimlds/data/all_detect_images', has_labels=True),
+    ))

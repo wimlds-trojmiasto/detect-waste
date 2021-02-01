@@ -1,35 +1,36 @@
 import json
 
+
 def taco_to_detectwaste(label):
     # converts taco categories names to detectwaste
     glass = ["Glass bottle", "Broken glass", "Glass jar"]
     metals_and_plastic = ["Aluminium foil", "Clear plastic bottle",
-                        "Other plastic bottle", "Plastic bottle cap",
-                        "Metal bottle cap", "Aerosol", "Drink can",
-                        "Food can", "Drink carton",
-                        "Disposable plastic cup",
-                        "Other plastic cup", "Plastic lid", "Metal lid",
-                        "Single-use carrier bag", "Polypropylene bag",
-                        "Plastic Film", "Six pack rings", "Spread tub",
-                        "Tupperware", "Disposable food container",
-                        "Other plastic container", "Plastic glooves",
-                        "Plastic utensils", "Pop tab", "Scrap metal",
-                        "Plastic straw", "Other plastic", "Plastic film",
-                        "Food Can", "Crisp packet"]
+                          "Other plastic bottle", "Plastic bottle cap",
+                          "Metal bottle cap", "Aerosol", "Drink can",
+                          "Food can", "Drink carton",
+                          "Disposable plastic cup",
+                          "Other plastic cup", "Plastic lid", "Metal lid",
+                          "Single-use carrier bag", "Polypropylene bag",
+                          "Plastic Film", "Six pack rings", "Spread tub",
+                          "Tupperware", "Disposable food container",
+                          "Other plastic container", "Plastic glooves",
+                          "Plastic utensils", "Pop tab", "Scrap metal",
+                          "Plastic straw", "Other plastic", "Plastic film",
+                          "Food Can", "Crisp packet"]
 
     non_recyclable = ["Aluminium blister pack", "Carded blister pack",
-                    "Meal carton", "Pizza box", "Cigarette",
-                    "Paper cup", "Meal carton", "Foam cup",
-                    "Glass cup", "Wrapping paper",
-                    "Magazine paper", "Garbage bag",
-                    "Plastified paper bag",
-                    "Other plastic wrapper", "Foam food container",
-                    "Rope", "Shoe", "Squeezable tube", "Paper straw",
-                    "Styrofoam piece", "Rope & strings", "Tissues"]
+                      "Meal carton", "Pizza box", "Cigarette",
+                      "Paper cup", "Meal carton", "Foam cup",
+                      "Glass cup", "Wrapping paper",
+                      "Magazine paper", "Garbage bag",
+                      "Plastified paper bag",
+                      "Other plastic wrapper", "Foam food container",
+                      "Rope", "Shoe", "Squeezable tube", "Paper straw",
+                      "Styrofoam piece", "Rope & strings", "Tissues"]
 
     other = ["Battery"]
     paper = ["Corrugated carton", "Egg carton", "Toilet tube",
-            "Other carton", "Normal paper", "Paper bag"]
+             "Other carton", "Normal paper", "Paper bag"]
     bio = ["Food waste"]
     unknown = ["Unlabeled litter"]
 
@@ -52,6 +53,7 @@ def taco_to_detectwaste(label):
         label = "unknown"
     return label
 
+
 def taco_categories_to_detectwaste(source, dest):
     # function that updates taco annotations to detectwaste categories
     # from sixty categories to glass, metals_and_plastics, non_recyclable
@@ -59,7 +61,7 @@ def taco_categories_to_detectwaste(source, dest):
 
     with open(source, 'r') as f:
         dataset = json.loads(f.read())
-   
+
     categories = dataset['categories']
     anns = dataset['annotations']
     info = dataset['info']
@@ -82,9 +84,9 @@ def taco_categories_to_detectwaste(source, dest):
     try:
         detectwaste_categories[34]['supercategory'] = \
             taco_to_detectwaste("Plastified paper bag")
-    except:
-        print("no plastified paper bag category, ignoring removal")
-        
+    except Exception as e:
+        print(f"{e}: no plastified paper bag category, ignoring removal")
+
     detectwaste_ids = {}
     detectwaste_cat_names = []
     cat_id = 1
@@ -115,10 +117,10 @@ def taco_categories_to_detectwaste(source, dest):
             detectwaste_categories[cat_id]['supercategory']
 
     anns = anns_detectwaste
-    
+
     for cat, items in zip(dataset['categories'], detectwaste_ids.items()):
         dataset['categories'] = [cat for cat in dataset['categories']
-                        if cat['id'] < len(detectwaste_ids)]
+                                 if cat['id'] < len(detectwaste_ids)]
         category, id = items
         cat['name'] = category
         cat['supercategory'] = category
@@ -128,32 +130,34 @@ def taco_categories_to_detectwaste(source, dest):
     with open(dest, 'w') as f:
         json.dump(dataset, f)
     print('Finished converting ids. New ids:', detectwaste_ids)
-    
+
+
 def convert_to_binary(source, dest):
     with open(source, 'r') as f:
         dataset = json.loads(f.read())
-   
+
     anns = dataset['annotations']
     info = dataset['info']
 
     # update info about dataset
     info['description'] = 'detectwaste_binary'
     info['year'] = 2021
-    
+
     # update categories
     categories = dict()
     categories['name'] = 'litter'
     categories['category'] = 'litter'
     categories['id'] = 1
     dataset['categories'] = [categories]
-    
+
     for i, ann in enumerate(anns):
-        anns[i]['category_id'] = int(categories['id'])      
-    
+        anns[i]['category_id'] = int(categories['id'])
+
     with open(dest, 'w') as f:
         json.dump(dataset, f)
     print('Finished converting ids. New ids:', dataset['categories'])
-        
+
+
 def convert_dataset(annotations_template_path,
                     annotations_to_convert_path,
                     save_path):
@@ -195,13 +199,17 @@ def convert_dataset(annotations_template_path,
 
     print('Finished converting dataset')
 
+
 def concatenate_datasets(list_of_datasets, dest=None):
     # concatenate list of datasets into one single file
     # the first dataset in the list will be used as a base
     # and the rest of datasets will be appended
-    last_id = 0
-    last_im_id = None
-    concat_dataset = None
+    last_ann_id = 0
+    last_im_id = 0
+    concat_dataset = {}
+    concat_dataset['images'] = []
+    concat_dataset['annotations'] = []
+
     for i, annot in enumerate(list_of_datasets):
         with open(annot, 'r') as f:
             dataset = json.loads(f.read())
@@ -209,19 +217,23 @@ def concatenate_datasets(list_of_datasets, dest=None):
         anns = dataset['annotations'].copy()
         images = dataset['images'].copy()
 
-        if last_id > 0:
-            for ann in anns:
-                ann['id'] += last_id
-                ann['image_id'] += last_im_id
-            for im in images:
-                im['id'] += last_im_id
-            concat_dataset['images'] += images
-            concat_dataset['annotations'] += anns
-        else:
-            concat_dataset = dataset.copy()
+        img_dict = {}
+        for im in images:
+            img_dict[im['id']] = last_im_id
+            im['id'] = last_im_id
+            last_im_id += 1
 
-        last_id = len(anns)
-        last_im_id = len(images)
+        for ann in dataset['annotations']:
+            ann['image_id'] = img_dict[ann['image_id']]
+            ann['id'] = last_ann_id
+            last_ann_id += 1
+
+        concat_dataset['images'] += images
+        concat_dataset['annotations'] += anns
+
+    concat_dataset['info'] = dataset['info']
+    concat_dataset['licenses'] = dataset['licenses']
+    concat_dataset['categories'] = dataset['categories']
 
     print("Concatenated ", len(concat_dataset['annotations']), "bboxes,",
           len(concat_dataset['images']), "images in total.")
@@ -232,4 +244,3 @@ def concatenate_datasets(list_of_datasets, dest=None):
         with open(dest, 'w') as f:
             json.dump(concat_dataset, f)
         print('Saved results to', dest)
-
