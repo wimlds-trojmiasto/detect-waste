@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from omegaconf import OmegaConf
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.gpu_stats_monitor import GPUStatsMonitor
@@ -11,14 +12,15 @@ from efficientdet_lighning.efficientdet.factory import create_model
 
 
 class EfficientDetModule(pl.LightningModule):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
+        self.config = config
         self.model = create_model(
-            model_name='tf_efficientdet_d2', #yamlconfig
+            model_name=self.config.mod_name, #yamlconfig
             bench_task='train',
             num_classes=7,
-            pretrained=True, #yamlconfig
-            pretrained_backbone=True, #yamlconfig
+            pretrained=self.config.pre_train, #yamlconfig
+            pretrained_backbone=self.config.pre_train_back, #yamlconfig
             redundant_bias=None,
             label_smoothing=None,
             new_focal=None,
@@ -66,14 +68,9 @@ class EfficientDetModule(pl.LightningModule):
         _, self.loader_eval, self.evaluator = create_datasets_and_loaders({}, self.model_config)
         return self.loader_eval
 
-    def configure_optimizers(self, ):
-        optim_parameters = {
-            'lr': 0.001, #yamlconfig
-            'opt': 'momentum', #yamlconfig
-            'opt-eps': 1e-3, #yamlconfig
-            'momentum': 0.9, #yamlconfig
-            'weight_decay': 4e-5 #yamlconfig
-        }
+    def configure_optimizers(self, config):
+        self.config = config
+        optim_parameters = self.config.opti_param
         optim_parameters = SimpleNamespace(**optim_parameters)
         optimizer = create_optimizer(optim_parameters, self.model)
         return optimizer
@@ -81,23 +78,25 @@ class EfficientDetModule(pl.LightningModule):
 
 if __name__ == '__main__':
     neptune_logger = NeptuneLogger(
-        project_name='detectwaste/efficientdet-lighning', #yamlconfig
-        experiment_name='effdet-lighning', #yamlconfig
+        project_name=config.name, #yamlconfig
+        experiment_name=config.exname #yamlconfig
     )
+    config = OmegaConf.load('config.yaml')
     gpu_monitor = GPUStatsMonitor()
     lr_logger = LearningRateMonitor()
     module = EfficientDetModule()
-    trainer = pl.Trainer(gpus=[0, 1, 2, 3, 4, 5, 6, 7], #yamlconfig
+    trainer = pl.Trainer(gpus=config.gpus, #yamlconfig
                          accelerator='ddp',
                          replace_sampler_ddp=False,
-                         gradient_clip_val=10, #yamlconfig
+                         gradient_clip_val=config.grad_cval, #yamlconfig
                          logger=neptune_logger,
                          # limit_train_batches=4 * 4 * 12,
                          # limit_val_batches=0,
                          log_every_n_steps=10,
                          sync_batchnorm=True,
-                         max_epochs=50, #yamlconfig
+                         max_epochs=config.max_epoch, #yamlconfig
                          callbacks=[gpu_monitor, lr_logger]
                          )
 
     trainer.fit(module)
+
