@@ -7,7 +7,7 @@ def taco_to_detectwaste(label):
              # open litter map
              "beerBottle", "wineBottle", "juice_bottles", "waterBottle",
               "glass_jar", "ice_tea_bottles", "spiritBottle", ]
-    metals_and_plastic = [ # TACO
+    metals_and_plastic = [  # TACO
                           "Aluminium foil", "Clear plastic bottle",
                           "Other plastic bottle", "Plastic bottle cap",
                           "Metal bottle cap", "Aerosol", "Drink can",
@@ -51,17 +51,16 @@ def taco_to_detectwaste(label):
                       "rope_small", "rope_large", "styro_medium",
                       "styrofoam_plate", "styro_large", "napkins",
                       "election_posters", "paperFoodPackaging"
-                      
-                       ]
+                     ]
 
     other = ["Battery", "trash_fishing_gear", "other",
              # open litter map
-            "batteries", "overflowing_bins", "fishing_gear_nets",
-            "dogshit", "elec_large", "chemical", "tyre"]
+             "batteries", "overflowing_bins", "fishing_gear_nets",
+             "dogshit", "elec_large", "chemical", "tyre"]
     paper = ["Corrugated carton", "Egg carton", "Toilet tube",
              "Other carton", "Normal paper", "Paper bag",
              "trash_paper", "paper"]
-    bio = ["Food waste","trash_wood", "wood", "bio"]
+    bio = ["Food waste", "trash_wood", "wood", "bio"]
     unknown = ["Unlabeled litter", "trash_etc", "unknown"]
     ignore = ["rubbish", "Rubbish", "litter"]
 
@@ -86,8 +85,10 @@ def taco_to_detectwaste(label):
         label = "unknown"
     return label
 
+
 def label_to_detectwaste(label):
     return taco_to_detectwaste(label)
+
 
 def taco_categories_to_detectwaste(source, dest):
     # function that updates taco annotations to detectwaste categories
@@ -156,7 +157,6 @@ def taco_categories_to_detectwaste(source, dest):
                 detectwaste_categories[cat_id]['supercategory']
         except:
             continue
-        
 
     anns = anns_detectwaste
 
@@ -174,10 +174,12 @@ def taco_categories_to_detectwaste(source, dest):
     else:
         with open(dest, 'w') as f:
             json.dump(dataset, f)
-    #print('Finished converting ids. New ids:', detectwaste_ids)
+    # print('Finished converting ids. New ids:', detectwaste_ids)
+
 
 def convert_categories_to_detectwaste(source, dest):
     return taco_categories_to_detectwaste(source, dest)
+
 
 def convert_to_binary(source, dest):
     with open(source, 'r') as f:
@@ -245,6 +247,7 @@ def convert_dataset(annotations_template_path,
         json.dump(dataset_to_convert, f)
 
     # print('Finished converting dataset')
+
 
 def concatenate_datasets(list_of_datasets, dest=None):
     # concatenate list of datasets into one single file
