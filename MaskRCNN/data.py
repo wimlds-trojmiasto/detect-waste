@@ -118,14 +118,14 @@ def get_transform(train):
     return T.Compose(transforms)
 
 
-def build(image_set):
+def build(image_set, images_path, annotation_path):
     PATHS = {
-        "train": ('/dih4/dih4_2/wimlds/data/all_detect_images',
-        '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask_all_train.json'),
-        "val": ('/dih4/dih4_2/wimlds/data/all_detect_images',
-        '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask_all_test.json'),
-        "test": ('/dih4/dih4_2/wimlds/data/all_detect_images',
-        '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask_all_test.json'),
+        "train": (images_path,
+                  f'{annotation_path}_train.json'),
+        "val": (images_path,
+                f'{annotation_path}_test.json'),
+        "test": (images_path,
+                 f'{annotation_path}_test.json')
     }
 
     img_folder, ann_file = PATHS[image_set]

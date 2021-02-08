@@ -16,15 +16,27 @@ import neptune
 
 def get_args_parser():
     parser = argparse.ArgumentParser(
-        'Prepare detection task with Mask R-CNN')
+        'Prepare instance segmentation task with Mask R-CNN')
     parser.add_argument('--output_dir',
                         help='path to save checkpoints',
                         default='/dih4/dih4_2/wimlds/smajchrowska/',
                         type=str)
+    parser.add_argument('--images_dir',
+                        help='path to images directory',
+                        default='/dih4/dih4_2/wimlds/data/all_detect_images',
+                        type=str)
+    parser.add_argument(
+        '--anno_name',
+        help='path to annotation json (part name)',
+        default='/dih4/dih4_home/smajchrowska/detect-waste/'
+                'annotations/annotations_binary_mask_all',
+        type=str)
     parser.add_argument('--batch_size', default=2, type=int)
     parser.add_argument('--num_workers', default=4, type=int)
     parser.add_argument('--num_epochs', default=10, type=int)
     parser.add_argument('--gpu_id', default=2, type=int)
+    parser.add_argument('--num_classes', default=2, type=int)
+    parser.add_argument('--neptune', action='store_true')
 
     return parser
 
@@ -52,22 +64,19 @@ if __name__ == '__main__':
     parser = get_args_parser()
     args = parser.parse_args()
 
-    # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
-    neptune.init(project_qualified_name='detectwaste/maskrcnn')
-    neptune.create_experiment(name='maskrcnn_resnet50_fpn')
+    if args.neptune:
+        # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
+        neptune.init(project_qualified_name='detectwaste/maskrcnn')
+        neptune.create_experiment(name='maskrcnn_resnet50_fpn')
+    else:
+        neptune = None
 
     output_dir = Path(args.output_dir)
 
     # use our dataset and defined transformations
-    dataset_train = build(image_set='train')
-    dataset_val = build(image_set='val')
-    '''
-    sampler_train = torch.utils.data.RandomSampler(dataset_train)
-    sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+    dataset_train = build('train', args.images_dir, args.anno_name)
+    dataset_val = build('val', args.images_dir, args.anno_name)
 
-    batch_sampler_train = torch.utils.data.BatchSampler(
-        sampler_train, batch_size=args.batch_size, drop_last=True)
-    '''
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
         dataset_train, batch_size=args.batch_size,
@@ -80,10 +89,12 @@ if __name__ == '__main__':
         collate_fn=utils.collate_fn)
 
     # define model
-    device = torch.device(f'cuda:{args.gpu_id}') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device(
+        f'cuda:{args.gpu_id}'
+        ) if torch.cuda.is_available() else torch.device('cpu')
 
     # our dataset has two classes only - background and waste
-    num_classes = 2
+    num_classes = args.num_classes
 
     # get the model using our helper function
     model = get_instance_segmentation_model(num_classes)
@@ -114,17 +125,22 @@ if __name__ == '__main__':
                     'epoch': epoch,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict()
-                   }, os.path.join(output_dir, 'checkpoint{epoch:04}.pth'))
+                   }, os.path.join(output_dir, f'checkpoint{epoch:04}.pth'))
         # evaluate on the test dataset
         coco_evaluator = evaluate(model, data_loader_test, device=device)
-        neptune.log_metric('valid/bbox-mAP@0.5:0.95',
-                           coco_evaluator.coco_eval['bbox'].stats[0])
-        neptune.log_metric('valid/bbox-mAP@0.5',
-                           coco_evaluator.coco_eval['bbox'].stats[1])
-        neptune.log_metric('valid/segm-mAP@0.5:0.95',
-                           coco_evaluator.coco_eval['segm'].stats[0])
-        neptune.log_metric('valid/segm-mAP@0.5',
-                           coco_evaluator.coco_eval['segm'].stats[1])
+        if neptune is not None:
+            neptune.log_metric(
+                'valid/bbox-mAP@0.5:0.95',
+                coco_evaluator.coco_eval['bbox'].stats[0])
+            neptune.log_metric(
+                'valid/bbox-mAP@0.5',
+                coco_evaluator.coco_eval['bbox'].stats[1])
+            neptune.log_metric(
+                'valid/segm-mAP@0.5:0.95',
+                coco_evaluator.coco_eval['segm'].stats[0])
+            neptune.log_metric(
+                'valid/segm-mAP@0.5',
+                coco_evaluator.coco_eval['segm'].stats[1])
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
