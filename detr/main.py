@@ -18,8 +18,6 @@ from models import build_model
 
 from util.laprop import LaProp
 import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]="7"
 
 
 def get_args_parser():
@@ -98,11 +96,14 @@ def get_args_parser():
                         help='path where to save, empty for no saving')
     parser.add_argument('--device', default='cuda',
                         help='device to use for training / testing')
+    parser.add_argument('--gpu_id', default=1, type=int,
+                        help='id of gpu to use for training / testing')
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='start epoch')
     parser.add_argument('--eval', action='store_true')
+    parser.add_argument('--neptune', action='store_true')
     parser.add_argument('--num_workers', default=2, type=int)
 
     # distributed training parameters
@@ -113,6 +114,8 @@ def get_args_parser():
 
 
 def main(args):
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
     utils.init_distributed_mode(args)
     print("git:\n  {}\n".format(utils.get_sha()))
 
@@ -121,6 +124,14 @@ def main(args):
     print(args)
 
     device = torch.device(args.device)
+    if args.neptune:
+        # Connect your script to Neptune
+        import neptune
+        # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
+        neptune.init(project_qualified_name='detectwaste/detr')
+        neptune.create_experiment(name=f"{args.dataset_file}_{args.backbone}")
+    else:
+        neptune = None
 
     # fix the seed for reproducibility
     seed = args.seed + utils.get_rank()
@@ -194,8 +205,8 @@ def main(args):
                 args.resume, map_location='cpu', check_hash=True)
         else:
             checkpoint = torch.load(args.resume, map_location='cpu')
-        if args.dataset_file == 'taco' and args.start_epoch == 0:
-            # For TACO dataset
+        if (args.dataset_file == 'taco' or args.dataset_file == 'multi') and args.start_epoch == 0:
+            # For TACO or multi datasets
             del checkpoint["model"]["class_embed.weight"]
             del checkpoint["model"]["class_embed.bias"]
             del checkpoint["model"]["query_embed.weight"]
@@ -223,7 +234,7 @@ def main(args):
             sampler_train.set_epoch(epoch)
         train_stats = train_one_epoch(
             model, criterion, data_loader_train, optimizer, device, epoch,
-            args.clip_max_norm)
+            args.clip_max_norm, neptune)
         lr_scheduler.step()
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
@@ -238,24 +249,26 @@ def main(args):
                     'epoch': epoch,
                     'args': args,
                 }, checkpoint_path)
-
         test_stats, coco_evaluator = evaluate(
-            model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir
+            model, criterion, postprocessors, data_loader_val, base_ds, device,
+            args.output_dir, neptune
         )
-
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      **{f'test_{k}': v for k, v in test_stats.items()},
                      'epoch': epoch,
                      'n_parameters': n_parameters}
-
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
-
             # for evaluation logs
             if coco_evaluator is not None:
                 (output_dir / 'eval').mkdir(exist_ok=True)
                 if "bbox" in coco_evaluator.coco_eval:
+                    if args.neptune:
+                        neptune.log_metric('valid/mAP@0.5:0.95',
+                                        coco_evaluator.coco_eval['bbox'].stats[0])
+                        neptune.log_metric('valid/mAP@0.5',
+                                        coco_evaluator.coco_eval['bbox'].stats[1])
                     filenames = ['latest.pth']
                     if epoch % 50 == 0:
                         filenames.append(f'{epoch:03}.pth')
