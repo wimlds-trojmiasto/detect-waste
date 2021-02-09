@@ -143,28 +143,58 @@ def make_coco_transforms(image_set):
 
     raise ValueError(f'unknown {image_set}')
 
+
+def build_multi(image_set, args):
+    root = Path(args.coco_path)
+    assert root.exists(), f'provided annotation mixed path {root} does not exist'
+    PATHS = {
+        "train": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask0_all_train.json'),
+        "val": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask0_all_test.json'),
+        "test": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask0_all_test.json'),
+    }
+
+    img_folder, ann_file = PATHS[image_set]
+    dataset = CocoDetection(img_folder, ann_file,
+                            transforms=make_coco_transforms(image_set),
+                            return_masks=args.masks)
+    return dataset
+
+
 def build_taco(image_set, args):
     mode = args.dataset_mode
     root = Path(args.coco_path)
     assert root.exists(), f'provided COCO path {root} does not exist'
-    PATHS = {
-        "train": (root / "train", root / "annotations" / f'{mode}_train.json'),
-        "val": (root / "val", root / "annotations" / f'{mode}_val.json'),
-    }
-
+    if mode == 'one':
+        PATHS = {
+            "train": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_train.json'),
+            "val": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_test.json'),
+            "test": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_test.json'),
+                }
+    else:
+        PATHS = {
+            "train": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_train.json'), # root / "train", root / "annotations" / f'{mode}_train.json'),
+            "val": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_test.json') # root / "val", root / "annotations" / f'{mode}_val.json'),
+                }
     img_folder, ann_file = PATHS[image_set]
-    dataset = CocoDetection(img_folder, ann_file, transforms=make_coco_transforms(image_set), return_masks=args.masks)
+    dataset = CocoDetection(img_folder, ann_file,
+                            transforms=make_coco_transforms(image_set),
+                            return_masks=args.masks)
     return dataset
+
 
 def build(image_set, args):
     root = Path(args.coco_path)
     assert root.exists(), f'provided COCO path {root} does not exist'
     mode = 'instances'
     PATHS = {
-        "train": (root / "train2017", root / "annotations" / f'{mode}_train2017.json'),
-        "val": (root / "val2017", root / "annotations" / f'{mode}_val2017.json'),
+        "train": (root / "train2017",  # images
+                  root / "annotations" / f'{mode}_train2017.json'),
+        "val": (root / "val2017",
+                root / "annotations" / f'{mode}_val2017.json'),
     }
 
     img_folder, ann_file = PATHS[image_set]
-    dataset = CocoDetection(img_folder, ann_file, transforms=make_coco_transforms(image_set), return_masks=args.masks)
+    dataset = CocoDetection(img_folder, ann_file,
+                            transforms=make_coco_transforms(image_set),
+                            return_masks=args.masks)
     return dataset

@@ -1,6 +1,6 @@
 # **DE⫶TR** (PyTorch) for waste detection
 PyTorch training code and pretrained models for **DETR** (**DE**tection **TR**ansformer).
-We replace the full complex hand-crafted object detection pipeline with a Transformer, and match Faster R-CNN with a ResNet-50, obtaining **42 AP** on COCO using half the computation power (FLOPs) and the same number of parameters. Inference in 50 lines of PyTorch.
+Authors replace the full complex hand-crafted object detection pipeline with a Transformer, and match Faster R-CNN with a ResNet-50, obtaining **42 AP** on COCO using half the computation power (FLOPs) and the same number of parameters. Inference in 50 lines of PyTorch.
 
 **What it is**. Unlike traditional computer vision techniques, DETR approaches object detection as a direct set prediction problem. It consists of a set-based global loss, which forces unique predictions via bipartite matching, and a Transformer encoder-decoder architecture. 
 Given a fixed small set of learned object queries, DETR reasons about the relations of the objects and the global image context to directly output the final set of predictions in parallel. Due to this parallel nature, DETR is very fast and efficient.
@@ -79,23 +79,25 @@ to load DETR R50 with pretrained weights simply do:
 model = torch.hub.load('facebookresearch/detr', 'detr_resnet50', pretrained=True)
 ```
 
-# Dataset $ model modifications
+# Dataset & model modifications
 * we use TACO dataset with additional annotated data from detect-waste.
 
 We expect the directory structure to be the following:
 ```
 path/to/dato/
   annotations/  # annotation json files
-  train/    # train images
-  val/      # val images
+  train/        # train images
+  val/          # val images
 ```
+You can modify `datasets/coco.py` build function to add new dataset and another format of paths for coco annotations type.
+
 ## Model details
 * Optimizer: AdamW or LaProp
-* Number of class: 6 (paper, metals and plastics, bio, other, non-recycle, glass) or 1 (litter)
+* Number of class: 7 (paper, metals and plastics, bio, other, non-recycle, glass, unknown) or 1 (litter)
 * Backbone: ResNet50
 * Num queries: 100 (like in official Detr it coressponds to max number of instances per images - this should not be changed if we finetuned)
 * Eos coef: 0.1 (like in official Detr mean number of instances per image - this should not be changed if we finetuned)
-* 1300 epochs at lr 1e-4 with lr_drop to 1e-5 at 1000
+* 300 epochs at lr 1e-4 with lr_drop to 1e-5 at 200
 
 # Usage - Object detection
 There are no extra compiled components in DETR and package dependencies are minimal,
@@ -121,6 +123,12 @@ To train baseline DETR on a single node with 8 gpus for 300 epochs run:
 ```
 python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --coco_path /path/to/taco --dataset_file taco --dataset_mode one --output_dir wimlds_1 --resume detr-r50-e632da11.pth
 ```
+... with one gpu for mixed dataset of waste:
+
+```
+python3 main.py --coco_path /path/to/taco --dataset_file taco --dataset_mode one --output_dir multi_1 --resume detr-r50-e632da11.pth
+```
+or `--dataset_mode wimlds` for 8 classes example.
 
 We train DETR with AdamW setting learning rate in the transformer to 1e-4 and 1e-5 in the backbone.
 Horizontal flips, scales and crops are used for augmentation.
@@ -130,8 +138,14 @@ The transformer is trained with dropout of 0.1, and the whole model is trained w
 ## Evaluation
 To evaluate DETR R50 with a single GPU run:
 ```
-python main.py --batch_size 2 --no_aux_loss --eval --resume wimlds_1/checkpoint0099.pth --coco_path /dih4/dih4_2/wimlds/smajchrowska/TACO_split --dataset_mode one
+python main.py --batch_size 2 --no_aux_loss --eval --resume wimlds_1/checkpoint0099.pth --coco_path /dih4/dih4_2/wimlds/data/all_detect_images/ --dataset_file multi
 ```
 
 ## Results on TACO
 Our resuts are presented in ```./notebooks``` directory.
+
+| model | backbone  | Dataset       | # classes | bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
+| :---: | :-------: | :-----------: | :-------: | :---------: | :--------------: | :---------: | :--------------: |
+| DETR  | ResNet 50 |   TACO bboxes | 1         |    35.35    |       2.87       |      x      |  x               |
+| DETR  | ResNet 50 |   TACO bboxes | 8         |    5.69     |       17.18      |      x      |  x               |
+| DETR  | ResNet 50 |   Multi       | 1         |    37.92    |       19.43      |      x      |  x               |
