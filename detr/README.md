@@ -144,8 +144,8 @@ python main.py --batch_size 2 --no_aux_loss --eval --resume wimlds_1/checkpoint0
 ## Results on TACO
 Our resuts are presented in ```./notebooks``` directory.
 
-| model | backbone  | Dataset       | # classes | bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
-| :---: | :-------: | :-----------: | :-------: | :---------: | :--------------: | :---------: | :--------------: |
-| DETR  | ResNet 50 |   TACO bboxes | 1         |    35.35    |       2.87       |      x      |  x               |
-| DETR  | ResNet 50 |   TACO bboxes | 8         |    5.69     |       17.18      |      x      |  x               |
-| DETR  | ResNet 50 |   Multi       | 1         |    37.92    |       19.43      |      x      |  x               |
+| model | backbone  | Dataset       | # classes| bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
+| :---: | :-------: | :-----------: | :-------:| :---------: | :--------------: | :---------: | :--------------: |
+| DETR  | ResNet 50 |   TACO bboxes | 1        |    42.72    |       20.66      |      x      |  x               |
+| DETR  | ResNet 50 |   TACO bboxes | 7        |    6.17     |       3.03       |      x      |  x               |
+| DETR  | ResNet 50 |   Multi       | 1        |    37.93    |       19.43      |      x      |  x               |
