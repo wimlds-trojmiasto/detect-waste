@@ -2,6 +2,30 @@
 AI4Good project for detecting waste in environment
 www.detectwaste.ml
 
+## Results
+
+### Detection/Segmentation task
+| model  | backbone  | Dataset       | # classes | bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
+| :-----:| :-------: | :-----------: | :-------: | :---------: | :--------------: | :---------: | :--------------: |
+| DETR    | ResNet 50 |   TACO bboxes | 1        |    42.72    |       20.66      |      x      |  x               |
+| DETR    | ResNet 50 |   TACO bboxes | 7        |    6.17     |       3.03       |      x      |  x               |
+| DETR    | ResNet 50 |   Multi       | 1        |    37.93    |       19.43      |      x      |  x               |
+| EfficientDet-D2 | EfficientNet-B2 |    Taco bboxes  |  1    |    61.05  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Taco bboxes  |  7    |    18.78  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Drink-waste  |  4    |    99.60  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    MJU-Waste    |  1    |    97.74  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    TrashCan v1  |  8    |    91.28  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Wade-AI      |  1    |    33.03  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    UAVVaste     |  1    |    79.90  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Trash ICRA19 |  7    |    9.47   |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Multi        |  1    |    74.81  |   x     |    x     |      x  |
+| EfficientDet-D3 | EfficientNet-B3 |    Multi        |  1    |    74.53  |   x     |    x     |      x  |
+| Mask R-CNN  | ResNet 50    |  Multi   |  1    |    27.95 |       16.49   |    23.05     |    12.94       |
+| Mask R-CNN  | ResNetXt 101 |  Multi   |  1    |    19.70 |       6.20    |    24.70     |    13.20       |
+
+
+* `Multi` - name for mixed open dataset (with listed below datasets) for detection/segmentation task
+
 ## Data download (WIP)
 * TACO bboxes - in progress. TACO dataset can be downloaded (http://tacodataset.org/)[here]. TACO bboxes will be avaiable for download soon.
 
@@ -45,6 +69,12 @@ www.detectwaste.ml
 
     `kaggle datasets download -d arkadiyhacks/drinking-waste-classification`
 
+* [Wade-ai](https://github.com/letsdoitworld/wade-ai/tree/master/Trash_Detection)
+
+    Clone wade-ai repository
+        `git clone https://github.com/letsdoitworld/wade-ai.git`
+    
+    For coco annotation check: [majsylw/wade-ai/tree/coco-annotation] (https://github.com/majsylw/wade-ai/tree/coco-annotation/Trash_Detection/trash/dataset)
 
 For more datasets check: [waste-datasets-review](https://github.com/AgaMiko/waste-datasets-review)
 
