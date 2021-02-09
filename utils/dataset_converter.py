@@ -35,7 +35,6 @@ def taco_to_detectwaste(label):
                           "glass_jar_lid", "crisp_large", "crisp_small", 
                           "aluminium_foil", "bottleTops", "bottleLabel", 
                            ]
-
     non_recyclable = ["Aluminium blister pack", "Carded blister pack",
                       "Meal carton", "Pizza box", "Cigarette",
                       "Paper cup", "Meal carton", "Foam cup",
@@ -50,9 +49,7 @@ def taco_to_detectwaste(label):
                       "rope_medium", "tooth_brush", "styro_small",
                       "rope_small", "rope_large", "styro_medium",
                       "styrofoam_plate", "styro_large", "napkins",
-                      "election_posters", "paperFoodPackaging"
-                      
-                       ]
+                      "election_posters", "paperFoodPackaging"]
 
     other = ["Battery", "trash_fishing_gear", "other",
              # open litter map
@@ -161,8 +158,8 @@ def taco_categories_to_detectwaste(source, dest):
     anns = anns_detectwaste
 
     for cat, items in zip(dataset['categories'], detectwaste_ids.items()):
-        # dataset['categories'] = [cat for cat in dataset['categories']
-        #                          if cat['id'] < len(detectwaste_ids)]
+        dataset['categories'] = [cat for cat in dataset['categories']
+                                 if cat['id'] < len(detectwaste_ids)]
         category, id = items
         cat['name'] = category
         cat['supercategory'] = category
@@ -178,6 +175,7 @@ def taco_categories_to_detectwaste(source, dest):
 
 def convert_categories_to_detectwaste(source, dest):
     return taco_categories_to_detectwaste(source, dest)
+
 
 def convert_to_binary(source, dest):
     with open(source, 'r') as f:
@@ -202,8 +200,6 @@ def convert_to_binary(source, dest):
 
     with open(dest, 'w') as f:
         json.dump(dataset, f)
-    # print('Finished converting ids. New ids:', dataset['categories'])
-
 
 def convert_dataset(annotations_template_path,
                     annotations_to_convert_path,
@@ -246,6 +242,7 @@ def convert_dataset(annotations_template_path,
 
     # print('Finished converting dataset')
 
+
 def concatenate_datasets(list_of_datasets, dest=None):
     # concatenate list of datasets into one single file
     # the first dataset in the list will be used as a base
@@ -281,8 +278,6 @@ def concatenate_datasets(list_of_datasets, dest=None):
     concat_dataset['licenses'] = dataset['licenses']
     concat_dataset['categories'] = dataset['categories']
 
-    # print("Concatenated ", len(concat_dataset['annotations']), "bboxes,",
-    #       len(concat_dataset['images']), "images in total.")
 
     if dest is None:
         return concat_dataset
