@@ -265,10 +265,15 @@ def main(args):
                 (output_dir / 'eval').mkdir(exist_ok=True)
                 if "bbox" in coco_evaluator.coco_eval:
                     if args.neptune:
-                        neptune.log_metric('valid/mAP@0.5:0.95',
+                        neptune.log_metric('valid/bbox mAP@0.5:0.95',
                                         coco_evaluator.coco_eval['bbox'].stats[0])
-                        neptune.log_metric('valid/mAP@0.5',
+                        neptune.log_metric('valid/bbox mAP@0.5',
                                         coco_evaluator.coco_eval['bbox'].stats[1])
+                        if args.masks:
+                            neptune.log_metric('valid/segm mAP@0.5',
+                                            coco_evaluator.coco_eval['segm'].stats[1])
+                            neptune.log_metric('valid/segm mAP@0.5:0.95',
+                                            coco_evaluator.coco_eval['segm'].stats[0])
                     filenames = ['latest.pth']
                     if epoch % 50 == 0:
                         filenames.append(f'{epoch:03}.pth')
