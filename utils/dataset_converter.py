@@ -3,8 +3,12 @@ import json
 
 def taco_to_detectwaste(label):
     # converts taco categories names to detectwaste
-    glass = ["Glass bottle", "Broken glass", "Glass jar"]
-    metals_and_plastic = ["Aluminium foil", "Clear plastic bottle",
+    glass = ["Glass bottle", "Broken glass", "Glass jar", "Glass", "glass",
+             # open litter map
+             "beerBottle", "wineBottle", "juice_bottles", "waterBottle",
+              "glass_jar", "ice_tea_bottles", "spiritBottle", ]
+    metals_and_plastic = [ # TACO
+                          "Aluminium foil", "Clear plastic bottle",
                           "Other plastic bottle", "Plastic bottle cap",
                           "Metal bottle cap", "Aerosol", "Drink can",
                           "Food can", "Drink carton",
@@ -16,8 +20,21 @@ def taco_to_detectwaste(label):
                           "Other plastic container", "Plastic glooves",
                           "Plastic utensils", "Pop tab", "Scrap metal",
                           "Plastic straw", "Other plastic", "Plastic film",
-                          "Food Can", "Crisp packet"]
-
+                          "Food Can", "Crisp packet",
+                          # Other datasets
+                          "plastic", "trash_plastic", 
+                          "trash_metal", "HDPEM", "PET", "AluCan", 
+                          "metal", "trash_rubber", "rubber", "metals_and_plastic",
+                          # open litter map
+                          "ice_tea_can", "energy_can", "beerCan", "tinCan",
+                          "degraded_plasticbottle", "fizzyDrinkBottle",
+                          "milk_bottle",  "plastic_cups", "plasticCutlery", 
+                          "plastic_cup_tops", "mediumplastics", "plasticFoodPackaging", 
+                          "macroplastics", "plasticAlcoholPackaging", "degraded_plasticbag",
+                          "alcohol_plastic_cups", "microplastics", "smoking_plastic",
+                          "glass_jar_lid", "crisp_large", "crisp_small", 
+                          "aluminium_foil", "bottleTops", "bottleLabel", 
+                           ]
     non_recyclable = ["Aluminium blister pack", "Carded blister pack",
                       "Meal carton", "Pizza box", "Cigarette",
                       "Paper cup", "Meal carton", "Foam cup",
@@ -26,13 +43,24 @@ def taco_to_detectwaste(label):
                       "Plastified paper bag",
                       "Other plastic wrapper", "Foam food container",
                       "Rope", "Shoe", "Squeezable tube", "Paper straw",
-                      "Styrofoam piece", "Rope & strings", "Tissues"]
+                      "Styrofoam piece", "Rope & strings", "Tissues",
+                      "trash_fabric", "cloth", "non_recyclable",
+                      # open litter map
+                      "rope_medium", "tooth_brush", "styro_small",
+                      "rope_small", "rope_large", "styro_medium",
+                      "styrofoam_plate", "styro_large", "napkins",
+                      "election_posters", "paperFoodPackaging"]
 
-    other = ["Battery"]
+    other = ["Battery", "trash_fishing_gear", "other",
+             # open litter map
+            "batteries", "overflowing_bins", "fishing_gear_nets",
+            "dogshit", "elec_large", "chemical", "tyre"]
     paper = ["Corrugated carton", "Egg carton", "Toilet tube",
-             "Other carton", "Normal paper", "Paper bag"]
-    bio = ["Food waste"]
-    unknown = ["Unlabeled litter"]
+             "Other carton", "Normal paper", "Paper bag",
+             "trash_paper", "paper"]
+    bio = ["Food waste","trash_wood", "wood", "bio"]
+    unknown = ["Unlabeled litter", "trash_etc", "unknown"]
+    ignore = ["rubbish", "Rubbish", "litter"]
 
     if (label in glass):
         label = "glass"
@@ -48,11 +76,15 @@ def taco_to_detectwaste(label):
         label = "bio"
     elif(label in unknown):
         label = "unknown"
+    elif(label in ignore):
+        label = "ignore"
     else:
-        print(label, "is non-taco label")
+        # print(label, "is non-taco label")
         label = "unknown"
     return label
 
+def label_to_detectwaste(label):
+    return taco_to_detectwaste(label)
 
 def taco_categories_to_detectwaste(source, dest):
     # function that updates taco annotations to detectwaste categories
@@ -111,10 +143,17 @@ def taco_categories_to_detectwaste(source, dest):
 
     for ann in anns_temp:
         cat_id = ann['category_id']
-        detectwaste_categories[cat_id]['category'] = \
-            detectwaste_categories[cat_id]['supercategory']
-        detectwaste_categories[cat_id]['name'] = \
-            detectwaste_categories[cat_id]['supercategory']
+        try:
+            detectwaste_categories[cat_id]['category'] = \
+                detectwaste_categories[cat_id]['supercategory']
+        except:
+            continue
+        try:
+            detectwaste_categories[cat_id]['name'] = \
+                detectwaste_categories[cat_id]['supercategory']
+        except:
+            continue
+        
 
     anns = anns_detectwaste
 
@@ -127,9 +166,15 @@ def taco_categories_to_detectwaste(source, dest):
         cat['category'] = category
         cat['id'] = id
 
-    with open(dest, 'w') as f:
-        json.dump(dataset, f)
-    print('Finished converting ids. New ids:', detectwaste_ids)
+    if dest == None:
+        return dataset
+    else:
+        with open(dest, 'w') as f:
+            json.dump(dataset, f)
+    #print('Finished converting ids. New ids:', detectwaste_ids)
+
+def convert_categories_to_detectwaste(source, dest):
+    return taco_categories_to_detectwaste(source, dest)
 
 
 def convert_to_binary(source, dest):
@@ -155,8 +200,6 @@ def convert_to_binary(source, dest):
 
     with open(dest, 'w') as f:
         json.dump(dataset, f)
-    print('Finished converting ids. New ids:', dataset['categories'])
-
 
 def convert_dataset(annotations_template_path,
                     annotations_to_convert_path,
@@ -189,15 +232,15 @@ def convert_dataset(annotations_template_path,
         new_id = template_categories.index(category)
         template_id_to_new_id[template_id+1] = new_id+1
 
-    print('Old categories:', categories)
-    print('New categories:', template_categories)
+    # print('Old categories:', categories)
+    # print('New categories:', template_categories)
     for annt in dataset_to_convert['annotations']:
         annt['category_id'] = template_id_to_new_id[annt['category_id']]
 
     with open(save_path, 'w') as f:
         json.dump(dataset_to_convert, f)
 
-    print('Finished converting dataset')
+    # print('Finished converting dataset')
 
 
 def concatenate_datasets(list_of_datasets, dest=None):
@@ -235,8 +278,6 @@ def concatenate_datasets(list_of_datasets, dest=None):
     concat_dataset['licenses'] = dataset['licenses']
     concat_dataset['categories'] = dataset['categories']
 
-    print("Concatenated ", len(concat_dataset['annotations']), "bboxes,",
-          len(concat_dataset['images']), "images in total.")
 
     if dest is None:
         return concat_dataset

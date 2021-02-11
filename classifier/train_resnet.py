@@ -1,4 +1,3 @@
-
 '''
 Script to train and test litter classifier.
 '''
@@ -88,6 +87,7 @@ def load_split_train_test(datadir, resize_img=(224, 224),
     else:
         train_sampler = SubsetRandomSampler(train_idx)
         test_sampler = SubsetRandomSampler(test_idx)
+        
     trainloader = torch.utils.data.DataLoader(train_data,
                                               sampler=train_sampler,
                                               batch_size=batch_size)
