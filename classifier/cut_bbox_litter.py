@@ -23,7 +23,8 @@ def get_args_parser():
         'Prepare images of trash for classification task')
     parser.add_argument('--src_coco',
                         help='path to directory with coco annotations',
-                        type=str)
+                        type=str,
+                        default='../annotations')
     parser.add_argument('--src_img',
                         help='path to source directory with images',
                         type=str,
@@ -33,21 +34,23 @@ def get_args_parser():
                         type=str, default='images_square/')
     parser.add_argument('--jobs',
                         help='number of multiprocess to run',
-                        type=int, default=10)
-    parser.add_argument('--name',
-                        help='type of annotations: wimlds or epi',
-                        default='wimlds',
-                        choices=['wimlds', 'epi'],
-                        type=str)
+                        type=int, default=50)
     # * square shape
     parser.add_argument('--square', action='store_true',
                         help="cut images into square shape")
+    # zoom. useful for classification when used witg
+    # detection algorithm that select not bbox coordinates
+    # however can lower the scores if images are
+    # crowded with many objects
+    parser.add_argument('--zoom',
+                        help='zoom out or in bounding box',
+                        type=int, default=1.2)
     return parser
 
 
 def crop(annotations_list,
          i, mode, images, mapping_category,
-         src_img, dst_img, cut_square=True):
+         src_img, dst_img, zoom, cut_square=True):
     for annotation_obj in tqdm(annotations_list):
         # read information from 'annotations'
         annotation_id = str(i) + str(annotation_obj['id'])
@@ -66,7 +69,8 @@ def crop(annotations_list,
             else:
                 y = y - (-width+height)/2
                 width = height
-
+        width *= zoom
+        height *= zoom
         crop_img = img[int(y): int(y + height),
                        int(x): int(x + width)]
 
@@ -139,6 +143,7 @@ def main(args):
                                                    mapping_category,
                                                    args.src_img,
                                                    args.dst_img,
+                                                   args.zoom,
                                                    cut_square))
                     p.start()
                 p.join()
