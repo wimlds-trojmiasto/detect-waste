@@ -1,30 +1,6 @@
 # Detect waste
 AI4Good project for detecting waste in environment
-www.detectwaste.ml
-
-## Results
-
-### Detection/Segmentation task
-| model  | backbone  | Dataset       | # classes | bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
-| :-----:| :-------: | :-----------: | :-------: | :---------: | :--------------: | :---------: | :--------------: |
-| DETR    | ResNet 50 |   TACO bboxes | 1        |    42.72    |       20.66      |      x      |  x               |
-| DETR    | ResNet 50 |   TACO bboxes | 7        |    6.17     |       3.03       |      x      |  x               |
-| DETR    | ResNet 50 |   Multi       | 1        |    37.93    |       19.43      |      x      |  x               |
-| EfficientDet-D2 | EfficientNet-B2 |    Taco bboxes  |  1    |    61.05  |   x     |    x     |      x  |
-| EfficientDet-D2 | EfficientNet-B2 |    Taco bboxes  |  7    |    18.78  |   x     |    x     |      x  |
-| EfficientDet-D2 | EfficientNet-B2 |    Drink-waste  |  4    |    99.60  |   x     |    x     |      x  |
-| EfficientDet-D2 | EfficientNet-B2 |    MJU-Waste    |  1    |    97.74  |   x     |    x     |      x  |
-| EfficientDet-D2 | EfficientNet-B2 |    TrashCan v1  |  8    |    91.28  |   x     |    x     |      x  |
-| EfficientDet-D2 | EfficientNet-B2 |    Wade-AI      |  1    |    33.03  |   x     |    x     |      x  |
-| EfficientDet-D2 | EfficientNet-B2 |    UAVVaste     |  1    |    79.90  |   x     |    x     |      x  |
-| EfficientDet-D2 | EfficientNet-B2 |    Trash ICRA19 |  7    |    9.47   |   x     |    x     |      x  |
-| EfficientDet-D2 | EfficientNet-B2 |    Multi        |  1    |    74.81  |   x     |    x     |      x  |
-| EfficientDet-D3 | EfficientNet-B3 |    Multi        |  1    |    74.53  |   x     |    x     |      x  |
-| Mask R-CNN  | ResNet 50    |  Multi   |  1    |    27.95 |       16.49   |    23.05     |    12.94       |
-| Mask R-CNN  | ResNetXt 101 |  Multi   |  1    |    19.70 |       6.20    |    24.70     |    13.20       |
-
-
-* `Multi` - name for mixed open dataset (with listed below datasets) for detection/segmentation task
+[www.detectwaste.ml](www.detectwaste.ml)
 
 ## Data download (WIP)
 * TACO bboxes - in progress. TACO dataset can be downloaded (http://tacodataset.org/)[here]. TACO bboxes will be avaiable for download soon.
@@ -106,30 +82,62 @@ Script will automaticlly split all datasets to train and test set with Multilabe
 
 # Models
 
-To read more about waste detection check [litter-detection-review](https://github.com/majsylw/litter-detection-review)
+To read more about past waste detection works check [litter-detection-review](https://github.com/majsylw/litter-detection-review)
 
-* ### Efficientdet (WIP)
+* ### EfficientDet (WIP)
 
-    To train efficientdet check `efficientdet/README.md`
+    To train EfficientDet check `efficientdet/README.md`
+    
+    For implementation details see [efficientdet-pytorch](https://github.com/rwightman/efficientdet-pytorch) by Ross Wightman.
 
 * ### DETR
 
     To train detr check `detr/README.md` (WIP)
 
     PyTorch training code and pretrained models for **DETR** (**DE**tection **TR**ansformer).
-    We replace the full complex hand-crafted object detection pipeline with a Transformer, and match Faster R-CNN with a ResNet-50, obtaining **42 AP** on COCO using half the computation power (FLOPs) and the same number of parameters. Inference in 50 lines of PyTorch.
+    Authors replaced the full complex hand-crafted object detection pipeline with a Transformer, and matched Faster R-CNN with a ResNet-50, obtaining **42 AP** on COCO using half the computation power (FLOPs) and the same number of parameters. Inference in 50 lines of PyTorch.
 
-    **What it is**. Unlike traditional computer vision techniques, DETR approaches object detection as a direct set prediction problem. It consists of a set-based global loss, which forces unique predictions via bipartite matching, and a Transformer encoder-decoder architecture. 
-    Given a fixed small set of learned object queries, DETR reasons about the relations of the objects and the global image context to directly output the final set of predictions in parallel. Due to this parallel nature, DETR is very fast and efficient.
+    For implementation details see [End-to-End Object Detection with Transformers](https://github.com/facebookresearch/detr) by Facebook.
 
-    For details see [End-to-End Object Detection with Transformers](https://ai.facebook.com/research/publications/end-to-end-object-detection-with-transformers) by Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko.
+* ### Mask R-CNN
+    To train Mask R-CNN check `MaskRCNN/README.md`
 
-* ### FastRCNN
-    To train FastRCNN check `FastRCNN/README.md`
+    Our implementation based on [tutorial](https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html).
 
-* ### ResNet50 (only classification)
-   To train ResNet50 check `classifier/README.md`
+* ### Fast R-CNN
+    To train Fast R-CNN check `FastRCNN/README.md`
 
+* ### Classification with ResNet50 and EfficientNet
+   To train choosen model check `classifier/README.md`
+
+## Our results
+
+### Detection/Segmentation task
+| model  | backbone  | Dataset       | # classes | bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
+| :-----:| :-------: | :-----------: | :-------: | :---------: | :--------------: | :---------: | :--------------: |
+| DETR    | ResNet 50 |   TACO bboxes | 1        |    46.50    |       24.34      |      x      |  x               |
+| DETR    | ResNet 50 |   TACO bboxes | 7        |    6.69     |       3.23       |      x      |  x               |
+| DETR    | ResNet 50 |   *Multi       | 1        |    50.68    |       27.69      |      **54.80      |  **32.17               |
+| Mask R-CNN  | ResNet 50    |  *Multi   |  1    |    27.95 |       16.49   |    23.05     |    12.94       |
+| Mask R-CNN  | ResNetXt 101 |  *Multi   |  1    |    19.70 |       6.20    |    24.70     |    13.20       |
+| EfficientDet-D2 | EfficientNet-B2 |    Taco bboxes  |  1    |    61.05  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Taco bboxes  |  7    |    18.78  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Drink-waste  |  4    |    99.60  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    MJU-Waste    |  1    |    97.74  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    TrashCan v1  |  8    |    91.28  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Wade-AI      |  1    |    33.03  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    UAVVaste     |  1    |    79.90  |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    Trash ICRA19 |  7    |    9.47   |   x     |    x     |      x  |
+| EfficientDet-D2 | EfficientNet-B2 |    *Multi        |  1    |    74.81  |   x     |    x     |      x  |
+| EfficientDet-D3 | EfficientNet-B3 |    *Multi        |  1    |    74.53  |   x     |    x     |      x  |
+
+* `*` results achived with frozeen weights from detection task (after addition of mask head)
+* `**` `Multi` - name for mixed open dataset (with listed below datasets) for detection/segmentation task
+
+
+### Classification task
+
+```Under construction - TBA```
 
 ## Project Organization (WIP)
 ------------

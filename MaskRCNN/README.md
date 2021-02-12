@@ -46,6 +46,7 @@ Note: This is a simple model and only supports one gpu (not distribiuted trainin
 The model utilizes part of TorchVision's weights, which is pretrained on COCO dataset.
 Test on Multi detect-waste Segmentation val, on 1 RTX 2080Ti GPU:
 
-|     model  | backbone  | epoch | bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
-| ---------- | --------- | ----- | ----------- | ---------------- | ----------- | ---------------- |
-| Mask R-CNN | ResNet 50 |    2  |  0.25       |       0.14       |    0.21     |      0.12        |
+|     model   | backbone     |  dataset | bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
+| :---------: | :---------:  | :------: | :---------: |  :-------------: | :---------: | :--------------: |
+| Mask R-CNN  | ResNet 50    |  Multi   |    27.95    |       16.49      |   23.05     |    12.94         |
+| Mask R-CNN  | ResNetXt 101 |  Multi   |    19.70    |       6.20       |   24.70     |    13.20         |
