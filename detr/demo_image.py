@@ -98,5 +98,5 @@ if __name__ == '__main__':
     # convert boxes from [0; 1] to image scales
     bboxes_scaled = rescale_bboxes(outputs['pred_boxes'][0, keep], im.size)
 
-    #plot and save demo image
+    # plot and save demo image
     plot_results(im, probas[keep], bboxes_scaled)

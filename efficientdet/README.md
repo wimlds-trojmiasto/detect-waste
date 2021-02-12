@@ -14,7 +14,7 @@ A PyTorch EfficientDet for detecting waste using implementation from  [efficient
 
 # Environment
 ### Requirements
-` pip install -r requirements.txt `
+` pip install -r requirements/requirements.txt `
 
 ### Neptune
 * Find and set Neptune API token on your system as environment variable (your NEPTUNE_API_TOKEN should be added to ~./bashrc)
@@ -57,7 +57,7 @@ A PyTorch EfficientDet for detecting waste using implementation from  [efficient
 ### Run training
 Example run:
 
-* simply run `bash efficientdet/train.sh`
+* simply run `bash efficientdet/tools/train.sh`
 
     Example configuration:
 
@@ -79,7 +79,7 @@ Example run:
 
     All avaiable architectures can be found in `efficientdet/effdet/config/model_config.py`
         
-    To use other architecture from *model_config.py* select a dict and use it as `--model` param in your  `efficientdet/train.sh` file e.g. `mobiledetv3_large`
+    To use other architecture from *model_config.py* select a dict and use it as `--model` param in your  `efficientdet/tools/train.sh` file e.g. `mobiledetv3_large`
 
 
     `python3 efficientdet/train.py "/dih4/dih4_2/wimlds/data/" \
