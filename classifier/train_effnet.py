@@ -1,7 +1,10 @@
 import os
 import argparse
 import numpy as np
+from torch import DoubleTensor
 from torch.utils.data import DataLoader
+from torch.utils.data.sampler import (SubsetRandomSampler,
+                                      WeightedRandomSampler)
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers.neptune import NeptuneLogger
@@ -11,6 +14,8 @@ import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 from models.efficientnet import LitterClassification
 
+from train_resnet import make_weights_for_balanced_classes
+
 def get_args_parser():
     parser = argparse.ArgumentParser(
         'Train efficientnet')
@@ -19,6 +24,9 @@ def get_args_parser():
     parser.add_argument('--data', metavar='DIR',
                         help='path to base directory with data',
                         default='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/classifier/')
+    parser.add_argument('--save', metavar='OUTPUT',
+                        help='path to directory to save checkpoint',
+                        default='/dih4/dih4_2/wimlds/smajchrowska/classifier')
     parser.add_argument('--model', default='efficientnet-b0', type=str, 
                         help='Name of model to train (default: "efficientnet-b0)"')
     parser.add_argument('--lr', type=float, default=0.0001, 
@@ -27,15 +35,32 @@ def get_args_parser():
                     help='learning rate (default: 0.99)')
     parser.add_argument('-b', '--batch-size', type=int, default=16, 
                     help='input batch size for training (default: 16)')
-    parser.add_argument('--epochs', type=int, default=20, metavar='N',
+    parser.add_argument('--epochs', type=int, default=20, metavar='EPOCHS',
                     help='number of epochs to train (default: 20)')
-    parser.add_argument('--num-classes', type=int, default=7, metavar='N',
+    parser.add_argument('--num-classes', type=int, default=7, metavar='NUM',
                     help='number of classes to classify (default: 7)')
-    parser.add_argument('--gpu', type=int, default=7, metavar='N',
+    parser.add_argument('--gpu', type=int, default=7, metavar='GPU',
                     help='GPU number to use (default: 7)')
+    parser.add_argument('--weighted_sampler', action='store_true', default=False,
+                        help="for unbalanced dataset you can create a weighted sampler"
+                        "(default: False)")
     parser.set_defaults(redundant_bias=None)
     return parser
-      
+
+def make_sampler(split_set, weighted_sampler=False):
+    indices = list(range(len(split_set)))
+    if weighted_sampler:
+        # For unbalanced dataset we create a weighted sampler
+        sampler = []
+        for i in indices:
+            sampler.append(split_set.imgs[i])
+        weights = make_weights_for_balanced_classes(sampler,
+                                                    len(split_set.classes))
+        sampler = WeightedRandomSampler(DoubleTensor(weights), len(weights))
+    else:
+        sampler = SubsetRandomSampler(indices)
+    return sampler
+
 def get_augmentation(transform):
     return lambda img:transform(image=np.array(img))
 
@@ -58,18 +83,21 @@ def main(args):
                             A.Normalize(mean=[0.485, 0.456, 0.406],
                                         std=[0.229, 0.224, 0.225]),
                             ToTensorV2()])
+
     train_set = datasets.ImageFolder(root = TRAIN_DIR,
-                                    transform = get_augmentation(train_transform))
+                                     transform = get_augmentation(train_transform))
+    train_sampler = make_sampler(train_set, args.weighted_sampler)
     test_set = datasets.ImageFolder(root = TEST_DIR,
                                     transform = get_augmentation(test_transform))
-    
+    test_sampler = make_sampler(test_set, args.weighted_sampler)
+
     train_loader = DataLoader(train_set,
-                              batch_size=args.batch_size, 
-                              shuffle=True, 
+                              batch_size=args.batch_size,
+                              sampler=train_sampler,
                               num_workers=args.batch_size)
     test_loader = DataLoader(test_set, 
-                             batch_size=args.batch_size, 
-                             shuffle=False, 
+                             batch_size=args.batch_size,
+                             sampler=test_sampler,
                              num_workers=args.batch_size)
 
     if PSEUDO_DIR != None:
@@ -107,7 +135,7 @@ def main(args):
     trainer.fit(model,train_loader, test_loader) 
 
     #manually you can save best checkpoints - 
-    trainer.save_checkpoint("effnet.ckpt")
+    trainer.save_checkpoint(os.path.join(args.save,"effnet.ckpt"))
 
 if __name__ == '__main__':
     parser = get_args_parser()

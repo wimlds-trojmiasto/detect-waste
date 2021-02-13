@@ -17,6 +17,7 @@ class LitterClassification(pl.LightningModule):
         self.pseudoloader = pseudoloader
         self.pseudolabelling_start = pseudolabelling_start
         self.lr = lr
+        self.decay = decay
         
     def forward(self, x):
         x = x['image'].to(self.device)
