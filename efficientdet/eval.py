@@ -133,7 +133,7 @@ def main(args):
         img_name = os.path.join(args.src_img, fname)
         # read an image
         try:
-            im = Image.open(img_name)
+            im = Image.open(img_name).convert('RGB')
         except:
             print(f"Error with {img_name}")
             continue

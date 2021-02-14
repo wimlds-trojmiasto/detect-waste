@@ -1,4 +1,3 @@
-
 '''
 Script to sort oepenlittermap images for 7-class litter classification.
 '''
@@ -9,6 +8,10 @@ import os
 import json
 from tqdm import tqdm
 from shutil import copy2
+
+from pycocotools.coco import COCO
+
+from cut_bbox_litter import crop
 from utils.dataset_converter import label_to_detectwaste
     
 def extract_category(ann):
@@ -20,30 +23,55 @@ def get_args_parser():
     parser = argparse.ArgumentParser(
         'Prepare images of trash for classification task')
     parser.add_argument('--src_ann', help='path to openlittermap annotations',
+                        default='/dih4/dih4_2/wimlds/zklawikowska/openlittermap/jsondata.json',
+                        type=str)
+    parser.add_argument('--coco', default='/dih4/dih4_home/smajchrowska/openlittermap.json',
+                        help='path to our coco openlittermap annotations',
                         type=str)
     parser.add_argument('--src_img',
                         help='path to source directory with images',
-                        type=str, default='/dih4/dih4_2/wimlds/zklawikowska/openlittermap/drive/')
+                        type=str, default='/dih4/dih4_2/wimlds/zklawikowska/openlittermap/images/')
     parser.add_argument('--dst_img',
                         help='path to destination directory for images',
-                        type=str, default='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/classifier/openlittermap/)
+                        type=str, default='/dih4/dih4_2/wimlds/smajchrowska/openlittermap/')
     return parser
+
 
 def main(args):
     print(args)
     with open(args.src_ann, 'r') as f:
-            dataset = json.loads(f.read())
+        dataset = json.load(f)
+    if args.coco:
+        with open(args.coco, 'r') as f:
+            coco_dataset = json.load(f)
+        coco = COCO(args.coco)
+
+        # build a dictionary mapping the file name to the image id
+        images_map = {}
+        for img_obj in coco_dataset['images']:
+            file_name = img_obj['file_name']
+            id = img_obj['id']
+            images_map[file_name] = id
 
     anns = dataset['features']
-    categories = []
     for ann in tqdm(anns):
         try:
             category = extract_category(ann)
             label = label_to_detectwaste(category)
-            img_src = os.path.join(args.src_img,extract_filename(ann))
+            img_src = os.path.join(args.src_img, extract_filename(ann))
             img_path = os.path.join(args.dst_img, label, extract_filename(ann))
-            os.makedirs(os.path.dirname(img_path), exist_ok=True)
-            copy2(img_src,img_path)
+            if not args.coco:
+                os.makedirs(os.path.dirname(img_path), exist_ok=True)
+                copy2(img_src, img_path)
+            else:
+                img_id = images_map[extract_filename(ann)]
+                annIds = coco.getAnnIds(imgIds=img_id)
+                coco_anns = coco.loadAnns(annIds)
+                #breakpoint()
+                for coco_a in coco_anns:
+                    crop(coco_a, 'pseudolabel', extract_filename(ann),
+                         label, True, 1,
+                         args.src_img, args.dst_img, i=coco_a['id'])
         except:
             continue
 
