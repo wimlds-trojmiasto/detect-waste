@@ -135,7 +135,7 @@ def main(args):
     trainer.fit(model,train_loader, test_loader) 
 
     #manually you can save best checkpoints - 
-    trainer.save_checkpoint(os.path.join(args.save,"effnet.ckpt"))
+    trainer.save_checkpoint(os.path.join(args.save,"effnetv4.ckpt"))
 
 if __name__ == '__main__':
     parser = get_args_parser()

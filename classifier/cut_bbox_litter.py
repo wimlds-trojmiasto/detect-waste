@@ -27,12 +27,53 @@ def get_args_parser():
                         default='wimlds',
                         choices=['wimlds', 'epi'],
                         type=str)
+    # * square shape
+    parser.add_argument('--square', action='store_true',
+                        help="cut images into square shape")
+    # zoom. useful for classification when used witg
+    # detection algorithm that select not bbox coordinates
+    # however can lower the scores if images are
+    # crowded with many objects
+    parser.add_argument('--zoom',
+                        help='zoom out or in bounding box',
+                        type=int, default=1)
     return parser
+
+def crop(annotation_obj, mode,
+         fname, category_name, square,
+         zoom, src_img, dst_img,  i):
+    # read information from 'annotations'
+    annotation_id = str(i) + str(annotation_obj['id'])
+    file_name = os.path.join(src_img, fname)
+
+    # prepare for cropping - USING THE BBOX's
+    # WIDTH AND HEIGHT HERE
+    x, y, width, height = annotation_obj['bbox']
+    img = cv2.imread(file_name)
+    if square:
+        if width > height:
+            x = x - (width-height)/2
+            height = width
+        else:
+            y = y - (-width+height)/2
+            width = height
+    width *= zoom
+    height *= zoom
+    crop_img = img[int(abs(y)): int(abs(y) + abs(height)),
+                   int(abs(x)): int(abs(x) + abs(width))]
+    try:
+        os.makedirs(os.path.dirname(
+            os.path.join(dst_img, mode, category_name,
+                         annotation_id + '.jpg')), exist_ok=True)
+        cv2.imwrite(os.path.join(dst_img, mode, category_name,
+                                 annotation_id + '.jpg'),
+                    crop_img)
+    except BaseException:
+        print(f"ERROR: {file_name}")
 
 def main(args):
     print(args)
     modes =['train', 'test']
-    cut_square = True
     
     for mode in modes:
         print("Running for mode ", mode)
@@ -68,36 +109,11 @@ def main(args):
                 images[id] = file_name
 
             for annotation_obj in tqdm(data_all['annotations']):
-                # read information from 'annotations'
-                annotation_id = str(i) + str(annotation_obj['id'])
-                image_id = int(annotation_obj['image_id'])
-                file_name = os.path.join(args.src_img, images[image_id])
-
                 category_name = mapping_category[annotation_obj['category_id']]
-                # prepare for cropping - USING THE BBOX's
-                # WIDTH AND HEIGHT HERE
-                x, y, width, height = annotation_obj['bbox']
-                img = cv2.imread(file_name)
-                if cut_square:
-                    if width > height:
-                        x = x - (width-height)/2
-                        height = width
-                    else:
-                        y = y - (-width+height)/2
-                        width = height
-                    
-                # somehow some coordinates are negative???
-                crop_img = img[int(abs(y)): int(abs(y) + abs(height)),
-                            int(abs(x)): int(abs(x) + abs(width))]
-                
-                
-                    
-                try:
-                    cv2.imwrite(os.path.join(args.dst_img, mode, category_name,
-                                            annotation_id +'.jpg'),
-                                crop_img)
-                except BaseException:
-                    print(f"ERROR: {file_name}")
+                image_id = int(annotation_obj['image_id'])
+                crop(annotation_obj, mode, images[image_id],
+                     category_name, args.square, args.zoom,
+                     args.src_img, args.dst_img, i)
 
 
 if __name__ == '__main__':
