@@ -27,20 +27,20 @@ def get_args_parser():
     parser.add_argument('--save', metavar='OUTPUT',
                         help='path to directory to save checkpoint',
                         default='/dih4/dih4_2/wimlds/smajchrowska/classifier')
-    parser.add_argument('--model', default='efficientnet-b0', type=str, 
-                        help='Name of model to train (default: "efficientnet-b0)"')
+    parser.add_argument('--model', default='efficientnet-b2', type=str, 
+                        help='Name of model to train (default: "efficientnet-b2)"')
     parser.add_argument('--lr', type=float, default=0.0001, 
                     help='learning rate (default: 0.0001)')
     parser.add_argument('--decay', type=float, default=0.99, 
                     help='learning rate (default: 0.99)')
-    parser.add_argument('-b', '--batch-size', type=int, default=16, 
+    parser.add_argument('-b', '--batch-size', type=int, default=32, 
                     help='input batch size for training (default: 16)')
     parser.add_argument('--epochs', type=int, default=20, metavar='EPOCHS',
                     help='number of epochs to train (default: 20)')
     parser.add_argument('--num-classes', type=int, default=7, metavar='NUM',
                     help='number of classes to classify (default: 7)')
-    parser.add_argument('--gpu', type=int, default=7, metavar='GPU',
-                    help='GPU number to use (default: 7)')
+    parser.add_argument('--gpu', type=int, default=1, metavar='GPU',
+                    help='GPU number to use (default: 1)')
     parser.add_argument('--weighted_sampler', action='store_true', default=False,
                         help="for unbalanced dataset you can create a weighted sampler"
                         "(default: False)")
@@ -86,18 +86,19 @@ def main(args):
 
     train_set = datasets.ImageFolder(root = TRAIN_DIR,
                                      transform = get_augmentation(train_transform))
-    train_sampler = make_sampler(train_set, args.weighted_sampler)
     test_set = datasets.ImageFolder(root = TEST_DIR,
                                     transform = get_augmentation(test_transform))
-    test_sampler = make_sampler(test_set, args.weighted_sampler)
 
+    # add weighted sampler for train loader
+    train_sampler = make_sampler(train_set, args.weighted_sampler)
     train_loader = DataLoader(train_set,
                               batch_size=args.batch_size,
                               sampler=train_sampler,
                               num_workers=args.batch_size)
+    # dont shuffle input data in validation set
     test_loader = DataLoader(test_set, 
+                             shuffle = False,
                              batch_size=args.batch_size,
-                             sampler=test_sampler,
                              num_workers=args.batch_size)
 
     if PSEUDO_DIR != None:

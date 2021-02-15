@@ -11,13 +11,15 @@ from tqdm import tqdm
 
 class LitterClassification(pl.LightningModule):
     
-    def __init__(self, model_name, lr, decay, num_classes = 7, pseudoloader = None, pseudolabelling_start = 5):
+    def __init__(self, model_name, lr, decay, num_classes = 7, pseudoloader = None,
+                 pseudolabelling_start = 5, pseudolabel_mode = 'per_batch'):
         super().__init__()
         self.efficient_net = EfficientNet.from_pretrained(model_name,num_classes=num_classes)
         self.pseudoloader = pseudoloader
         self.pseudolabelling_start = pseudolabelling_start
         self.lr = lr
         self.decay = decay
+        self.pseudolabel_mode = pseudolabel_mode
         
     def forward(self, x):
         x = x['image'].to(self.device)
@@ -82,9 +84,15 @@ class LitterClassification(pl.LightningModule):
         self.logger.experiment.log_text("classification_report",str(classification_report(all_y,all_ypred)))
         
         if self.current_epoch >= self.pseudolabelling_start:
-            self.pseudolabelling_update_outputs()
-            self.pseudolabelling_update_loss()
-        
+            if self.pseudolabel_mode == 'per_epoch':
+                self.pseudolabelling_update_outputs()
+                self.pseudolabelling_update_loss()
+            elif self.pseudolabel_mode == 'per_batch':
+                self.pseudolabelling_update_per_batch()
+            else:
+                print('Possible modes are "per_batch" and "per_epoch". You assigned ',
+                    self.pseudolabel_mode)
+            
     def pseudolabelling_update_loss(self):
         print('Calculating loss for pseudo-labelling')
         optimizer = self.optimizers()
@@ -98,10 +106,19 @@ class LitterClassification(pl.LightningModule):
             self.log("pseudo_loss",loss,
                     prog_bar=True,logger=True)
             
-    def pseudolabelling_update_outputs(self):
-        print('Updating outputs for pseudolabelling')
+    def pseudolabelling_update_outputs(self, batch = None, batch_idx = None):
         optimizer = self.optimizers()
-        for batch_idx, batch in tqdm(enumerate(self.pseudoloader)):
+        if batch == None or batch_idx == None:
+            print('Updating outputs for pseudolabelling')
+            # update predictions for all batches
+            for batch_idx, batch in tqdm(enumerate(self.pseudoloader)):
+                output = self.training_step(batch, batch_idx, pseudo_label = True)
+                y_pred = output['y_pred']
+                # apply new targets
+                for idx, y in enumerate(y_pred):
+                    self.pseudoloader.dataset.targets[batch_idx*len(y_pred)+idx] = torch.argmax(y, dim=0)
+        else:
+            # update predictions for single batch
             output = self.training_step(batch, batch_idx, pseudo_label = True)
             y_pred = output['y_pred']
             # apply new targets
@@ -121,3 +138,17 @@ class LitterClassification(pl.LightningModule):
                                             'metals_and_plastic', 
                                             'non_recyclable', 'other',
                                             'paper', 'unknown']
+        
+    def pseudolabelling_update_per_batch(self):
+        optimizer = self.optimizers()
+        for batch_idx, batch in tqdm(enumerate(self.pseudoloader)):
+            self.pseudolabelling_update_outputs(batch, batch_idx)
+            output = self.training_step(batch, batch_idx, pseudo_label = True)
+            loss = output['loss']
+            loss.requires_grad = True
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            self.log("pseudo_loss",loss,
+                    prog_bar=True,logger=True)
+            
