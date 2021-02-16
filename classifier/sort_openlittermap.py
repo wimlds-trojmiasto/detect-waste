@@ -1,24 +1,29 @@
 '''
-Script to sort oepenlittermap images for 7-class litter classification.
+Script to sort openlittermap images for 7-class litter classification.
 '''
-import sys
 import argparse
-sys.path.append('..')
-import os
 import json
-from tqdm import tqdm
+import os
 from shutil import copy2
+import sys
+sys.path.append('..')
 
 from pycocotools.coco import COCO
+from tqdm import tqdm
 
 from cut_bbox_litter import crop
 from utils.dataset_converter import label_to_detectwaste
-    
+
+
 def extract_category(ann):
     return ann['properties']['result_string'].split('.')[1].split(' ')[0]
+
+
 def extract_filename(ann):
-    return str(ann['properties']['photo_id']) +'.'+ ann['properties']['filename'].split('.')[-1]
-                      
+    return str(ann['properties']['photo_id']) + '.'
+    + ann['properties']['filename'].split('.')[-1]
+
+
 def get_args_parser():
     parser = argparse.ArgumentParser(
         'Prepare images of trash for classification task')
@@ -67,7 +72,6 @@ def main(args):
                 img_id = images_map[extract_filename(ann)]
                 annIds = coco.getAnnIds(imgIds=img_id)
                 coco_anns = coco.loadAnns(annIds)
-                #breakpoint()
                 for coco_a in coco_anns:
                     crop(coco_a, 'pseudolabel', extract_filename(ann),
                          label, True, 1,
