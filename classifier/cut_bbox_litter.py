@@ -16,7 +16,8 @@ def get_args_parser():
         'Prepare images of trash for classification task')
     parser.add_argument('--src_img',
                         help='path to source directory with images',
-                        type=str, default='/dih4/dih4_2/wimlds/data/all_detect_images')
+                        type=str,
+                        default='/dih4/dih4_2/wimlds/data/all_detect_images')
     parser.add_argument('--dst_img',
                         help='path to destination directory for images',
                         type=str, default='images_square/')

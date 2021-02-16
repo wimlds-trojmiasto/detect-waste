@@ -27,18 +27,20 @@ def extract_filename(ann):
 def get_args_parser():
     parser = argparse.ArgumentParser(
         'Prepare images of trash for classification task')
-    parser.add_argument('--src_ann', help='path to openlittermap annotations',
-                        default='/dih4/dih4_2/wimlds/zklawikowska/openlittermap/jsondata.json',
-                        type=str)
-    parser.add_argument('--coco', default='/dih4/dih4_home/smajchrowska/openlittermap.json',
-                        help='path to our coco openlittermap annotations',
-                        type=str)
-    parser.add_argument('--src_img',
-                        help='path to source directory with images',
-                        type=str, default='/dih4/dih4_2/wimlds/zklawikowska/openlittermap/images/')
-    parser.add_argument('--dst_img',
-                        help='path to destination directory for images',
-                        type=str, default='/dih4/dih4_2/wimlds/smajchrowska/openlittermap/')
+    parser.add_argument(
+        '--src_ann', help='path to openlittermap annotations',
+        default='/dih4/dih4_2/wimlds/zklawikowska/openlittermap/jsondata.json',
+        type=str)
+    parser.add_argument(
+        '--coco', default='/dih4/dih4_home/smajchrowska/openlittermap.json',
+        help='path to our coco openlittermap annotations',
+        type=str)
+    parser.add_argument(
+        '--src_img', help='path to source directory with images', type=str,
+        default='/dih4/dih4_2/wimlds/zklawikowska/openlittermap/images/')
+    parser.add_argument(
+        '--dst_img', help='path to destination directory for images',
+        type=str, default='/dih4/dih4_2/wimlds/smajchrowska/openlittermap/')
     return parser
 
 

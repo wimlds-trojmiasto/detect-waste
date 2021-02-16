@@ -14,7 +14,6 @@ import argparse
 import time
 import yaml
 import logging
-import neptune
 from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
@@ -54,15 +53,18 @@ config_parser = parser = argparse.ArgumentParser(description='Training Config', 
 parser.add_argument('-c', '--config', default='', type=str, metavar='FILE',
                     help='YAML config file specifying default arguments')
 
-
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 # Dataset / Model parameters
 parser.add_argument('root', metavar='DIR',
+                    default='/dih4/dih4_2/wimlds/data/all_detect_images',
                     help='path to dataset')
+parser.add_argument('--ann_name', type=str,
+                    default='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/binary_mixed_',
+                    help='path to annotation file (without train or test subset)')
 parser.add_argument('--dataset', default='coco', type=str, metavar='DATASET',
                     help='Name of model to train (default: "coco"')
-parser.add_argument('--model', default='tf_efficientdet_d1', type=str, metavar='MODEL',
-                    help='Name of model to train (default: "tf_efficientdet_d1"')
+parser.add_argument('--model', default='tf_efficientdet_d2', type=str, metavar='MODEL',
+                    help='Name of model to train (default: "tf_efficientdet_d2"')
 add_bool_arg(parser, 'redundant-bias', default=None, help='override model config for redundant bias')
 parser.set_defaults(redundant_bias=None)
 parser.add_argument('--val-skip', type=int, default=0, metavar='N',
@@ -192,11 +194,16 @@ add_bool_arg(parser, 'bench-labeler', default=False,
              help='label targets in model bench, increases GPU load at expense of loader processes')
 parser.add_argument('--output', default='', type=str, metavar='PATH',
                     help='path to output folder (default: none, current dir)')
+parser.add_argument('--device', default='cuda:7', type=str,
+                    help='device to train (default: cuda:7)')
 parser.add_argument('--eval-metric', default='map', type=str, metavar='EVAL_METRIC',
                     help='Best metric (default: "map"')
 parser.add_argument('--tta', type=int, default=0, metavar='N',
                     help='Test/inference time augmentation (oversampling) factor. 0=None (default: 0)')
 parser.add_argument("--local_rank", default=0, type=int)
+# Neptune settings
+parser.add_argument('--neptune', action='store_true', default=False,
+                    help='Launch experiment on neptune (if avail)')
 
 
 def _parse_args():
@@ -218,19 +225,22 @@ def _parse_args():
 
 def main():
     setup_default_logging()
-   
+
     args, args_text = _parse_args()
-    
-    # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
-    neptune.init(project_qualified_name = 'detectwaste/efficientdet')
-    neptune.create_experiment(name=args.model)
-    
+
+    if args.neptune:
+        import neptune
+        # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
+        neptune.init(project_qualified_name='detectwaste/efficientdet')
+        neptune.create_experiment(name=args.model)
+    else:
+        neptune = None
+
     args.pretrained_backbone = not args.no_pretrained_backbone
     args.prefetcher = not args.no_prefetcher
     args.distributed = False
     if 'WORLD_SIZE' in os.environ:
         args.distributed = int(os.environ['WORLD_SIZE']) > 1
-    args.device = 'cuda:7'
     args.world_size = 4
     args.rank = 4 # global rank
     args.GPUs = [4, 5, 6, 7]
@@ -368,7 +378,10 @@ def main():
     if args.local_rank == 0:
         logging.info('Scheduled epochs: {}'.format(num_epochs))
 
-    loader_train, loader_eval, evaluator = create_datasets_and_loaders(args, model_config)
+    loader_train, loader_eval, evaluator = create_datasets_and_loaders(
+                                                    args,
+                                                    model_config,
+                                                    neptune)
 
     if model_config.num_classes < loader_train.dataset.parser.max_label:
         logging.error(
@@ -406,7 +419,8 @@ def main():
             train_metrics = train_epoch(
                 epoch, model, loader_train, optimizer, args,
                 lr_scheduler=lr_scheduler, saver=saver, output_dir=output_dir,
-                amp_autocast=amp_autocast, loss_scaler=loss_scaler, model_ema=model_ema)
+                amp_autocast=amp_autocast, loss_scaler=loss_scaler, model_ema=model_ema,
+                neptune=neptune)
 
             if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
                 if args.local_rank == 0:
@@ -418,11 +432,15 @@ def main():
                 if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
                     distribute_bn(model_ema, args.world_size, args.dist_bn == 'reduce')
 
-                eval_metrics = validate(model_ema.ema, loader_eval, args, evaluator, log_suffix=' (EMA)')
+                eval_metrics = validate(model_ema.ema, loader_eval, args,
+                                        evaluator, log_suffix=' (EMA)',
+                                        neptune=neptune)
             else:
-                eval_metrics = validate(model, loader_eval, args, evaluator)
-                
-            neptune.log_metric('valid/mAP',eval_metrics[eval_metric])
+                eval_metrics = validate(model, loader_eval, args, evaluator,
+                                        neptune=neptune)
+
+            if args.neptune:
+                neptune.log_metric('valid/mAP',eval_metrics[eval_metric])
 
 
             if lr_scheduler is not None:
@@ -443,10 +461,10 @@ def main():
         logging.info('*** Best metric: {0} (epoch {1})'.format(best_metric, best_epoch))
 
 
-def create_datasets_and_loaders(args, model_config):
+def create_datasets_and_loaders(args, model_config, neptune=None):
     input_config = resolve_input_config(args, model_config=model_config)
 
-    dataset_train, dataset_eval = create_dataset(args.dataset, args.root)
+    dataset_train, dataset_eval = create_dataset(args.dataset, args.root, args.ann_name)
 
     # setup labeler in loader/collate_fn if not enabled in the model bench
     labeler = None
@@ -502,7 +520,8 @@ def create_datasets_and_loaders(args, model_config):
 def train_epoch(
         epoch, model, loader, optimizer, args,
         lr_scheduler=None, saver=None, output_dir='', 
-        amp_autocast=suppress, loss_scaler=None, model_ema=None):
+        amp_autocast=suppress, loss_scaler=None, model_ema=None,
+        neptune=None):
 
     batch_time_m = AverageMeter()
     data_time_m = AverageMeter()
@@ -523,7 +542,8 @@ def train_epoch(
         with amp_autocast():
             output = model(input, target)
         loss = output['loss']
-        neptune.log_metric('train/loss', loss.item())
+        if args.neptune:
+            neptune.log_metric('train/loss', loss.item())
         
         if not args.distributed:
             losses_m.update(loss.item(), input.size(0))
@@ -592,7 +612,8 @@ def train_epoch(
     return OrderedDict([('loss', losses_m.avg)])
 
 
-def validate(model, loader, args, evaluator=None, log_suffix=''):
+def validate(model, loader, args, evaluator=None, log_suffix='',
+             neptune=None):
     batch_time_m = AverageMeter()
     losses_m = AverageMeter()
 
@@ -606,7 +627,8 @@ def validate(model, loader, args, evaluator=None, log_suffix=''):
 
             output = model(input, target)
             loss = output['loss']
-            neptune.log_metric('valid/loss', loss.item())
+            if args.neptune:
+                neptune.log_metric('valid/loss', loss.item())
             
             if evaluator is not None:
                 evaluator.add_predictions(output['detections'], target)

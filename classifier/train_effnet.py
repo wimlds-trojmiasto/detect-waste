@@ -109,11 +109,13 @@ def main(args):
     train_set = datasets.ImageFolder(
         root=TRAIN_DIR,
         transform=get_augmentation(train_transform))
-    train_sampler = make_sampler(train_set, args.weighted_sampler)
+
     test_set = datasets.ImageFolder(
         root=TEST_DIR,
         transform=get_augmentation(test_transform))
 
+    # add weighted or random sampler
+    train_sampler = make_sampler(train_set, args.weighted_sampler)
     train_loader = DataLoader(train_set,
                               batch_size=args.batch_size,
                               sampler=train_sampler,
@@ -136,7 +138,8 @@ def main(args):
                                      lr=args.lr,
                                      decay=args.decay,
                                      num_classes=args.num_classes,
-                                     pseudoloader=pseudo_loader)
+                                     pseudoloader=pseudo_loader,
+                                     pseudolabel_mode=args.pseudolabel_mode)
     else:
         model = LitterClassification(model_name=args.model,
                                      lr=args.lr,
@@ -153,7 +156,6 @@ def main(args):
         # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
         logger = NeptuneLogger(project_name='detectwaste/classification',
                                tags=[args.model, TRAIN_DIR])
-        breakpoint()
     else:
         logger = True
 

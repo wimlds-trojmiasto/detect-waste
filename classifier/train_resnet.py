@@ -1,27 +1,28 @@
 '''
 Script to train and test litter classifier.
 '''
-import torch
+import argparse
+import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 import torchvision
 import torchvision.transforms as transforms
-
+import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.autograd import Variable
 
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import argparse
-
 
 def get_args_parser():
     parser = argparse.ArgumentParser(
         'Train and test network for classification task')
-    parser.add_argument('--data_img',
-                        help='path to directory with subdirectories with images',
-                        type=str)
+    parser.add_argument(
+        '--data_img',
+        help='path to directory with subdirectories with images',
+        type=str)
     parser.add_argument('--out',
                         help='path to main directory with checkpoints',
                         type=str)
@@ -77,17 +78,12 @@ def load_split_train_test(datadir, resize_img=(224, 224),
                                                     len(train_data.classes))
         train_sampler = torch.utils.data.sampler.WeightedRandomSampler(
             torch.DoubleTensor(weights), len(weights))
-        test_samples = []
-        for i in test_idx:
-            test_samples.append(train_data.imgs[i])
-        weights = make_weights_for_balanced_classes(test_samples,
-                                                    len(train_data.classes))
-        test_sampler = torch.utils.data.sampler.WeightedRandomSampler(
-            torch.DoubleTensor(weights), len(weights))
+        # random shuffle for validation subset
+        test_sampler = SubsetRandomSampler(test_idx)
     else:
         train_sampler = SubsetRandomSampler(train_idx)
         test_sampler = SubsetRandomSampler(test_idx)
-        
+
     trainloader = torch.utils.data.DataLoader(train_data,
                                               sampler=train_sampler,
                                               batch_size=batch_size)
@@ -101,7 +97,7 @@ def predict_image(image, model, device):
     image_tensor = test_transforms(image).float().to(device)
     image_tensor = image_tensor.unsqueeze_(0)
     input_img = Variable(image_tensor)
-    #input_img = input_img.to(device)
+    input_img = input_img.to(device)
     model.to(device)
     output = model(input_img)
     index = output.data.cpu().numpy().argmax()
@@ -208,7 +204,6 @@ def train(args, model, device):
     plt.savefig(os.path.join(args.out, 'logs.jpg'))
 
     print('Finished Training...')
-    model_name = 'classification_net.pth'
     out_path = os.path.join(args.out, 'classification_net.pth')
     torch.save(model.state_dict(), out_path)
 

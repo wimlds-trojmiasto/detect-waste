@@ -1,18 +1,20 @@
+import sys
+
+from efficientnet_pytorch import EfficientNet
+import matplotlib.pyplot as plt
+import pytorch_lightning as pl
+from pytorch_lightning.loggers.neptune import NeptuneLogger
+from pytorch_lightning.metrics.functional import accuracy
+from scikitplot.metrics import plot_confusion_matrix
+from sklearn.metrics import classification_report
 import torch
 from torch.nn import functional as F
-import pytorch_lightning as pl
-from pytorch_lightning.metrics.functional import accuracy
-from pytorch_lightning.loggers.neptune import NeptuneLogger
-from scikitplot.metrics import plot_confusion_matrix
-from efficientnet_pytorch import EfficientNet
-from sklearn.metrics import classification_report
 from torch.optim.lr_scheduler import MultiplicativeLR
-import matplotlib.pyplot as plt
 from tqdm import tqdm
-import sys
 
 
 class LitterClassification(pl.LightningModule):
+
     def __init__(self, model_name, lr, decay, num_classes=8, pseudoloader=None,
                  pseudolabelling_start=5, pseudolabel_mode='per_batch'):
         super().__init__()

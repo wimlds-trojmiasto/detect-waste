@@ -177,13 +177,17 @@ def main(args):
                         bbox=dict(facecolor='yellow', alpha=0.5))
             ann_id += 1
         img_id += 1
-        if args.dst_img is not None:
-            plt.axis('off')
-            plt.savefig(os.path.join(args.dst_img, 'BBox_' + fname))
-            plt.close()
+        try:
+            if args.dst_img is not None:
+                plt.axis('off')
+                plt.savefig(os.path.join(args.dst_img, 'BBox_' + fname))
+                plt.close()
+        except:
+            print(f"Error with {img_name}")
+            continue
 
-    with open(args.dst_coco, 'w') as f:
-        json.dump(annotations, f)
+        with open(args.dst_coco, 'w') as f:
+            json.dump(annotations, f)
 
 
 if __name__ == '__main__':
