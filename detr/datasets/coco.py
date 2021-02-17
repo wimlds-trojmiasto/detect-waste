@@ -147,11 +147,20 @@ def make_coco_transforms(image_set):
 def build_multi(image_set, args):
     root = Path(args.coco_path)
     assert root.exists(), f'provided annotation mixed path {root} does not exist'
-    PATHS = {
-        "train": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask0_all_train.json'),
-        "val": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask0_all_test.json'),
-        "test": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_mask0_all_test.json'),
-    }
+    if args.masks:
+        PATHS = {
+            "train": (root, '../annotations/annotations_binary_mask_all_train.json'),
+            "val": (root, '../annotations/annotations_binary_mask_all_test.json'),
+            "test": (root, '../annotations/annotations_binary_mask_all_test.json'),
+        }
+    else:
+        PATHS = {
+            "train": (root, '../annotations/annotations_binary_all_train.json'),
+            "val": (root, '../annotations/annotations_binary_all_test.json'),
+            "test": (root, '../annotations/annotations_binary_all_test.json'),
+        }
+    if args.num_classes != 1:
+        raise ValueError(f'Number classes {args.num_classes} not supported')
 
     img_folder, ann_file = PATHS[image_set]
     dataset = CocoDetection(img_folder, ann_file,
@@ -161,20 +170,21 @@ def build_multi(image_set, args):
 
 
 def build_taco(image_set, args):
-    mode = args.dataset_mode
     root = Path(args.coco_path)
     assert root.exists(), f'provided COCO path {root} does not exist'
-    if mode == 'one':
+    if args.num_classes == 1:
         PATHS = {
-            "train": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_train.json'),
-            "val": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_test.json'),
-            "test": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_binary_test.json'),
+            "train": (root, '../annotations/annotations_binary_train.json'),
+            "val": (root, '../annotations/annotations_binary_test.json'),
+            "test": (root, '../annotations/annotations_binary_test.json'),
+                }
+    elif args.num_classes == 7:
+        PATHS = {
+            "train": (root, '../annotations/annotations_train.json'),
+            "val": (root, '../annotations/annotations_test.json')
                 }
     else:
-        PATHS = {
-            "train": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_train.json'), # root / "train", root / "annotations" / f'{mode}_train.json'),
-            "val": ('/dih4/dih4_2/wimlds/data/all_detect_images', '/dih4/dih4_home/smajchrowska/detect-waste/annotations/annotations_test.json') # root / "val", root / "annotations" / f'{mode}_val.json'),
-                }
+        raise ValueError(f'Number classes {args.num_classes} not supported')
     img_folder, ann_file = PATHS[image_set]
     dataset = CocoDetection(img_folder, ann_file,
                             transforms=make_coco_transforms(image_set),
