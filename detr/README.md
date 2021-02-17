@@ -80,16 +80,18 @@ model = torch.hub.load('facebookresearch/detr', 'detr_resnet50', pretrained=True
 ```
 
 # Dataset & model modifications
-* we use TACO dataset with additional annotated data from detect-waste.
+* we use TACO dataset with additional annotated data from detect-waste,
+* we use few waste dataset mentioned in main `README.md` with annotated data by bbox (and somethimes also with mask).
 
 We expect the directory structure to be the following:
 ```
-path/to/dato/
-  annotations/  # annotation json files
-  train/        # train images
-  val/          # val images
+path/to/repository/
+  annotations/         # annotation json files
+path/to/images/        # all images
 ```
-You can modify `datasets/coco.py` build function to add new dataset and another format of paths for coco annotations type.
+You can modify `datasets/coco.py` and `datasets/__init__.py` build functions to add new dataset and another format of paths for coco annotations type.
+
+Check `detect-waste/annotations/README.md` to veryfy provided annotations by [Detect Waste in Pomerania team](https://detectwaste.ml/).
 
 ## Model details
 * Optimizer: AdamW or LaProp
@@ -99,7 +101,7 @@ You can modify `datasets/coco.py` build function to add new dataset and another 
 * Eos coef: 0.1 (like in official Detr mean number of instances per image - this should not be changed if we finetuned)
 * 300 epochs at lr 1e-4 with lr_drop to 1e-5 at 200
 
-# Usage - Object detection
+# Installation
 There are no extra compiled components in DETR and package dependencies are minimal,
 so the code is very simple to use. We provide instructions how to install dependencies via conda.
 First, clone the repository locally, and then, install PyTorch 1.5+ and torchvision 0.6+:
@@ -113,12 +115,11 @@ pip install -U 'git+https://github.com/cocodataset/cocoapi.git#subdirectory=Pyth
 ```
 That's it, should be good to train and evaluate detection models.
 
-(optional) to work with panoptic install panopticapi:
-```
-pip install git+https://github.com/cocodataset/panopticapi.git
-```
+# Model usage
 
-## Training
+
+
+## Training - Object detection
 To train baseline DETR on a single node with 8 gpus for 300 epochs run:
 ```
 python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --coco_path /path/to/taco --dataset_file taco --dataset_mode one --output_dir wimlds_1 --resume detr-r50-e632da11.pth
@@ -126,26 +127,45 @@ python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --coco_p
 ... with one gpu for mixed dataset of waste:
 
 ```
-python3 main.py --coco_path /path/to/taco --dataset_file taco --dataset_mode one --output_dir multi_1 --resume detr-r50-e632da11.pth
+python3 main.py --gpu_id 0 --coco_path /path/to/all/images --dataset_file taco --num_classes 1 --output_dir multi_1 --resume detr-r50-e632da11.pth
 ```
-or `--dataset_mode wimlds` for 8 classes example.
+or `--num_classes 7` for 7 classes example.
 
 We train DETR with AdamW setting learning rate in the transformer to 1e-4 and 1e-5 in the backbone.
 Horizontal flips, scales and crops are used for augmentation.
 Images are rescaled to have min size 800 and max size 1333.
 The transformer is trained with dropout of 0.1, and the whole model is trained with grad clip of 0.1.
 
+## Training - Instance Segmentation
+For instance segmentation, you can simply train a normal box model (or used a pre-trained one).
+
+Once you have a box model checkpoint, you need to freeze it, and train the segmentation head in isolation.
+You can train on a single node with 8 gpus for 25 epochs:
+
+```
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --masks --epochs 25 --lr_drop 15 --coco_path /path/to/all/images  --dataset_file multi --frozen_weights /output/path/box_model/checkpoint.pth --output_dir /output/path/segm_model
+```
+
 ## Evaluation
-To evaluate DETR R50 with a single GPU run:
+To evaluate DETR R50 with a single GPU (id=0) run:
 ```
-python main.py --batch_size 2 --no_aux_loss --eval --resume wimlds_1/checkpoint0099.pth --coco_path /dih4/dih4_2/wimlds/data/all_detect_images/ --dataset_file multi
+python main.py --gpu_id 0 --batch_size 2 --no_aux_loss --eval --resume path/to/checkpoint.pth --coco_path path/to/all/images --dataset_file multi
+```
+Additionaly we provided demo_image.py script to draw bounding boxes on choosen image. For example script can be run on GPU (id=0) with arguments:
+```
+python demo_image.py --save path/to/save/image.png --checkpoint path/to/checkpoint.pth --img path/or/url/to/image --device cuda:0
 ```
 
-## Results on TACO
-Our resuts are presented in ```./notebooks``` directory.
+# Performance
 
-| model | backbone  | Dataset       | # classes| bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 |
-| :---: | :-------: | :-----------: | :-------:| :---------: | :--------------: | :---------: | :--------------: |
-| DETR    | ResNet 50 |   TACO bboxes | 1        |    46.50    |       24.34      |      x      |  x               |
-| DETR    | ResNet 50 |   TACO bboxes | 7        |    6.69     |       3.23       |      x      |  x               |
-| DETR    | ResNet 50 |   *Multi      | 1        |    50.68    |       27.69      |      **54.80      |  **32.17               |
+Detect waste evaluation results can be found in this [notebook](https://github.com/wimlds-trojmiasto/detect-waste/blob/main/detr/notebooks/Detect_Waste_finetuning_detr.ipynb).
+
+| model | backbone  | Dataset | # classes| bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 | url |
+| :---: | :-------: | :-----------: | :-------:| :---------: | :--------------: | :---------: | :--------------: |:---: |
+| DETR    | ResNet 50 |   TACO bboxes | 1        |    46.50    |       24.35      |      x     |  x               |  x |
+| DETR    | ResNet 50 |   TACO bboxes | 7        |    12.03     |       6.69       |      x      |  x              | x |
+| DETR    | ResNet 50 |   `*Multi`     | 1        |    50.68    |       27.69      |      `**`x      |  `**`x               | x |
+| DETR    | ResNet 101 |   `*Multi`      | 1        |    x    |       x      |      `**`x      |  `**`x              | x |
+
+* `*` `Multi` - name for mixed open dataset (with listed in main `README.md` datasets) for detection/segmentation task
+* `**` results achived with frozeen weights from detection task (train the segmentation head in isolation)
