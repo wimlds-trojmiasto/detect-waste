@@ -93,7 +93,7 @@ def get_args_parser():
     # * Dataset parameters
     parser.add_argument('--dataset_file', default='multi')
     parser.add_argument('--num_classes', default=1,
-                        type=int)
+                        type=int, help="Number of classes - here, not id for no_object (default: 1)")
     parser.add_argument('--coco_path', type=str)
     parser.add_argument('--coco_panoptic_path', type=str)
     parser.add_argument('--remove_difficult', action='store_true')
