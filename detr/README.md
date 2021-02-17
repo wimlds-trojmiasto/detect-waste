@@ -91,7 +91,7 @@ path/to/images/        # all images
 ```
 You can modify `datasets/coco.py` and `datasets/__init__.py` build functions to add new dataset and another format of paths for coco annotations type.
 
-Check `detect-waste/annotations/README.md` to veryfy provided annotations by [Detect Waste in Pomerania team](https://detectwaste.ml/).
+Check `detect-waste/annotations/README.md` to verify provided annotations by [Detect Waste in Pomerania team](https://detectwaste.ml/).
 
 ## Model details
 * Optimizer: AdamW or LaProp
@@ -105,21 +105,23 @@ Check `detect-waste/annotations/README.md` to veryfy provided annotations by [De
 There are no extra compiled components in DETR and package dependencies are minimal,
 so the code is very simple to use. We provide instructions how to install dependencies via conda.
 First, clone the repository locally, and then, install PyTorch 1.5+ and torchvision 0.6+:
-```
+```bash
 conda install -c pytorch pytorch torchvision
 ```
 Install pycocotools (for evaluation on COCO) and scipy (for training):
-```
+```bash
 conda install cython scipy
 pip install -U 'git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI'
 ```
 That's it, should be good to train and evaluate detection models.
 
 ## Neptune
-To track logs (for example training loss) we used [neptune.ai](https://neptune.ai/). If you are interested in logging your experiments there, you should create account on the platform and create new project. Then
+To track logs (for example training loss) we used [neptune.ai](https://neptune.ai/). If you are interested in logging your experiments there, you should create account on the platform and create new project. Then:
 * Find and set Neptune API token on your system as environment variable (your NEPTUNE_API_TOKEN should be added to ~./bashrc)
 * Add your project_qualified_name name in the `main.py`
-    `neptune.init(project_qualified_name = 'YOUR_PROJECT_NAME/detect-waste') `
+    ```python
+      neptune.init(project_qualified_name = 'YOUR_PROJECT_NAME/detect-waste')
+    ```
     Currently it is set to private detect-waste neptune space.
 * install neptun-client library
     ```bash
@@ -134,12 +136,12 @@ For more check [LINK](https://neptune.ai/how-it-works).
 
 ## Training - Object detection
 To train baseline DETR on a single node with 8 gpus for 300 epochs run:
-```
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --coco_path /path/to/all/images --dataset_file taco --num_classes 1 --output_dir wimlds_1 --resume detr-r50-e632da11.pth
 ```
 ... with one gpu for extended TACO bboxes dataset of waste:
 
-```
+```bash
 python3 main.py --gpu_id 0 --coco_path /path/to/all/images --dataset_file taco --num_classes 1 --output_dir multi_1 --resume detr-r50-e632da11.pth
 ```
 or `--num_classes 7` for 7 classes example (inside model, no_object id will be set to 8).
@@ -155,17 +157,17 @@ For instance segmentation, you can simply train a normal box model (or used a pr
 Once you have a box model checkpoint, you need to freeze it, and train the segmentation head in isolation.
 You can train on a single node with 8 gpus for 25 epochs:
 
-```
+```bash
 python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --masks --epochs 25 --lr_drop 15 --coco_path /path/to/all/images  --dataset_file multi --frozen_weights /output/path/box_model/checkpoint.pth --output_dir /output/path/segm_model
 ```
 
 ## Evaluation
 To evaluate DETR R50 with a single GPU (id=0) run:
-```
+```bash
 python main.py --gpu_id 0 --batch_size 2 --no_aux_loss --eval --resume path/to/checkpoint.pth --coco_path path/to/all/images --dataset_file multi
 ```
 Additionaly we provided demo_image.py script to draw bounding boxes on choosen image. For example script can be run on GPU (id=0) with arguments:
-```
+```bash
 python demo_image.py --save path/to/save/image.png --checkpoint path/to/checkpoint.pth --img path/or/url/to/image --device cuda:0
 ```
 
@@ -181,4 +183,4 @@ Detect waste evaluation results can be found in this [notebook](https://github.c
 | DETR  |ResNet 101 |`*Multi`   | 1      |    x        |       x          |      `**`x  |  `**`x          |
 
 * `*` `Multi` - name for mixed open dataset (with listed in main `README.md` datasets) for detection/segmentation task
-* `**` results achived with frozeen weights from detection task (train the segmentation head in isolation)
+* `**` results achived with frozen weights from detection task (training the segmentation head in isolation)
