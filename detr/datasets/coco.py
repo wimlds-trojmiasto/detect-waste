@@ -155,9 +155,9 @@ def build_multi(image_set, args):
         }
     else:
         PATHS = {
-            "train": (root, '../annotations/annotations_binary_all_train.json'),
-            "val": (root, '../annotations/annotations_binary_all_test.json'),
-            "test": (root, '../annotations/annotations_binary_all_test.json'),
+            "train": (root, '../annotations/binary_mixed_test.json'),
+            "val": (root, '../annotations/binary_mixed_test.json'),
+            "test": (root, '../annotations/binary_mixed_test.json'),
         }
     if args.num_classes != 1:
         raise ValueError(f'Number classes {args.num_classes} not supported')

@@ -85,7 +85,9 @@ def plot_results(pil_img, prob, boxes, classes=['Litter'],
                 bbox=dict(facecolor='yellow', alpha=0.5))
     plt.axis('off')
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight',
+                    transparent=True, pad_inches=0)
+        plt.close()
         print(f'Image saved at {save_path}')
     else:
         plt.show()

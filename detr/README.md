@@ -1,9 +1,9 @@
 # **DE⫶TR** (PyTorch) for waste detection
+
+![](notebooks/detr_visualize.png)
+
 PyTorch training code and pretrained models for **DETR** (**DE**tection **TR**ansformer).
 Authors replace the full complex hand-crafted object detection pipeline with a Transformer, and match Faster R-CNN with a ResNet-50, obtaining **42 AP** on COCO using half the computation power (FLOPs) and the same number of parameters. Inference in 50 lines of PyTorch.
-
-**What it is**. Unlike traditional computer vision techniques, DETR approaches object detection as a direct set prediction problem. It consists of a set-based global loss, which forces unique predictions via bipartite matching, and a Transformer encoder-decoder architecture. 
-Given a fixed small set of learned object queries, DETR reasons about the relations of the objects and the global image context to directly output the final set of predictions in parallel. Due to this parallel nature, DETR is very fast and efficient.
 
 For details see [End-to-End Object Detection with Transformers](https://ai.facebook.com/research/publications/end-to-end-object-detection-with-transformers) by Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko.
 
@@ -79,9 +79,9 @@ to load DETR R50 with pretrained weights simply do:
 model = torch.hub.load('facebookresearch/detr', 'detr_resnet50', pretrained=True)
 ```
 
-# Dataset & model modifications
+# Detect-waste dataset & model modifications
 * we use TACO dataset with additional annotated data from detect-waste,
-* we use few waste dataset mentioned in main `README.md` with annotated data by bbox (and somethimes also with mask).
+* we use few waste dataset mentioned in main `README.md` with annotated data by bbox (and sometimes also with mask).
 
 We expect the directory structure to be the following:
 ```
@@ -115,21 +115,34 @@ pip install -U 'git+https://github.com/cocodataset/cocoapi.git#subdirectory=Pyth
 ```
 That's it, should be good to train and evaluate detection models.
 
-# Model usage
+## Neptune
+To track logs (for example training loss) we used [neptune.ai](https://neptune.ai/). If you are interested in logging your experiments there, you should create account on the platform and create new project. Then
+* Find and set Neptune API token on your system as environment variable (your NEPTUNE_API_TOKEN should be added to ~./bashrc)
+* Add your project_qualified_name name in the `main.py`
+    `neptune.init(project_qualified_name = 'YOUR_PROJECT_NAME/detect-waste') `
+    Currently it is set to private detect-waste neptune space.
+* install neptun-client library
+    ```bash
+      pip install neptune-client
+    ```
 
+To run experiments with neptune simply add `--neptune` flag during launch `main.py`.
 
+For more check [LINK](https://neptune.ai/how-it-works).
+
+# Model Usage
 
 ## Training - Object detection
 To train baseline DETR on a single node with 8 gpus for 300 epochs run:
 ```
-python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --coco_path /path/to/taco --dataset_file taco --dataset_mode one --output_dir wimlds_1 --resume detr-r50-e632da11.pth
+python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --coco_path /path/to/all/images --dataset_file taco --num_classes 1 --output_dir wimlds_1 --resume detr-r50-e632da11.pth
 ```
-... with one gpu for mixed dataset of waste:
+... with one gpu for extended TACO bboxes dataset of waste:
 
 ```
 python3 main.py --gpu_id 0 --coco_path /path/to/all/images --dataset_file taco --num_classes 1 --output_dir multi_1 --resume detr-r50-e632da11.pth
 ```
-or `--num_classes 7` for 7 classes example.
+or `--num_classes 7` for 7 classes example (inside model, no_object id will be set to 8).
 
 We train DETR with AdamW setting learning rate in the transformer to 1e-4 and 1e-5 in the backbone.
 Horizontal flips, scales and crops are used for augmentation.
@@ -160,12 +173,12 @@ python demo_image.py --save path/to/save/image.png --checkpoint path/to/checkpoi
 
 Detect waste evaluation results can be found in this [notebook](https://github.com/wimlds-trojmiasto/detect-waste/blob/main/detr/notebooks/Detect_Waste_finetuning_detr.ipynb).
 
-| model | backbone  | Dataset | # classes| bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95 | url |
-| :---: | :-------: | :-----------: | :-------:| :---------: | :--------------: | :---------: | :--------------: |:---: |
-| DETR    | ResNet 50 |   TACO bboxes | 1        |    46.50    |       24.35      |      x     |  x               |  x |
-| DETR    | ResNet 50 |   TACO bboxes | 7        |    12.03     |       6.69       |      x      |  x              | x |
-| DETR    | ResNet 50 |   `*Multi`     | 1        |    50.68    |       27.69      |      `**`x      |  `**`x               | x |
-| DETR    | ResNet 101 |   `*Multi`      | 1        |    x    |       x      |      `**`x      |  `**`x              | x |
+| model | backbone  | Dataset | # classes| bbox AP@0.5 | bbox AP@0.5:0.95 | mask AP@0.5 | mask AP@0.5:0.95|
+| :---: | :-------: | :-----: | :-------:| :---------: | :--------------: | :---------: | :--------------:|
+| DETR  | ResNet 50 |TACO bboxes| 1      |    46.50    |       24.35      |      x      |  x              |
+| DETR  | ResNet 50 |TACO bboxes| 7      |    12.03    |       6.69       |      x      |  x              |
+| DETR  | ResNet 50 |`*Multi`   | 1      |    50.68    |       27.69      | `**`54.80   |  `**`32.17      |
+| DETR  |ResNet 101 |`*Multi`   | 1      |    x        |       x          |      `**`x  |  `**`x          |
 
 * `*` `Multi` - name for mixed open dataset (with listed in main `README.md` datasets) for detection/segmentation task
 * `**` results achived with frozeen weights from detection task (train the segmentation head in isolation)
