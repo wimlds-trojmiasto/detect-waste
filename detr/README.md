@@ -166,9 +166,18 @@ To evaluate DETR R50 with a single GPU (id=0) run:
 ```bash
 python main.py --gpu_id 0 --batch_size 2 --no_aux_loss --eval --resume path/to/checkpoint.pth --coco_path path/to/all/images --dataset_file multi
 ```
-Additionaly we provided demo_image.py script to draw bounding boxes on choosen image. For example script can be run on GPU (id=0) with arguments:
+Additionaly we provided `demo.py` script to draw bounding boxes on choosen image. For example script can be run on GPU (id=0) with arguments:
 ```bash
-python demo_image.py --save path/to/save/image.png --checkpoint path/to/checkpoint.pth --img path/or/url/to/image --device cuda:0
+python demo.py --save path/to/save/image.png --checkpoint path/to/checkpoint.pth --img path/or/url/to/image --device cuda:0
+```
+or on video with `--video` argument:
+```bash
+python demo.py --save directory/to/save/frames --checkpoint path/to/checkpoint.pth --img path/to/video.mp4 --device cuda:0 --video --classes label0 label1 label3
+```
+
+If you managed to process all the frames, just run the following command from the directory where you saved the results:
+```bash
+ffmpeg -i img%08d.jpg movie.mp4
 ```
 
 # Performance
@@ -180,7 +189,7 @@ Detect waste evaluation results can be found in this [notebook](https://github.c
 | DETR  | ResNet 50 |TACO bboxes| 1      |    46.50    |       24.35      |      x      |  x              |
 | DETR  | ResNet 50 |TACO bboxes| 7      |    12.03    |       6.69       |      x      |  x              |
 | DETR  | ResNet 50 |`*Multi`   | 1      |    50.68    |       27.69      | `**`54.80   |  `**`32.17      |
-| DETR  |ResNet 101 |`*Multi`   | 1      |    x        |       x          |      `**`x  |  `**`x          |
+| DETR  |ResNet 101 |`*Multi`   | 1      |    51.63    |       29.65      |      37.02  |      19.33      |
 
 * `*` `Multi` - name for mixed open dataset (with listed in main `README.md` datasets) for detection/segmentation task
 * `**` results achived with frozen weights from detection task (training the segmentation head in isolation)
