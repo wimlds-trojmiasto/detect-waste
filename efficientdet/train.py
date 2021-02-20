@@ -59,7 +59,7 @@ parser.add_argument('root', metavar='DIR',
                     default='/dih4/dih4_2/wimlds/data/all_detect_images',
                     help='path to dataset')
 parser.add_argument('--ann_name', type=str,
-                    default='/dih4/dih4_2/wimlds/amikolajczyk/detect-waste/annotations/binary_mixed_',
+                    default='../annotations/binary_mixed_',
                     help='path to annotation file (without train or test subset)')
 parser.add_argument('--dataset', default='coco', type=str, metavar='DATASET',
                     help='Name of model to train (default: "coco"')
