@@ -51,7 +51,6 @@ def create_dataset(name, root, ann, splits=('train', 'val')):
             dataset_cfg = BinaryCfg(root=root, ann=ann)
         elif name.startswith('multi'):
             dataset_cfg = BinaryMultiCfg(root=root, ann=ann)
-            dataset_cfg.add_split(root=root, ann=ann)
         elif name.startswith('uav'):
             dataset_cfg = UAVVasteCfg(root=root, ann=ann)
         elif name.startswith('trashcan'):
@@ -66,17 +65,17 @@ def create_dataset(name, root, ann, splits=('train', 'val')):
             dataset_cfg = ICRACfg(root=root, ann=ann)
         else:
             assert False, f'Unknown dataset parser ({name})'
+        dataset_cfg.add_split()
         for s in splits:
             if s not in dataset_cfg.splits:
                 raise RuntimeError(f'{s} split not found in config')
             split_cfg = dataset_cfg.splits[s]
-            ann_file = root / split_cfg['ann_filename']
             parser_cfg = CocoParserCfg(
-                ann_filename=ann_file,
+                ann_filename=split_cfg['ann_filename'],
                 has_labels=split_cfg['has_labels']
             )
             datasets[s] = dataset_cls(
-                data_dir=root / Path(split_cfg['img_dir']),
+                data_dir=split_cfg['img_dir'],
                 parser=create_parser(dataset_cfg.parser, cfg=parser_cfg),
             )
     else:
