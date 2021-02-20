@@ -34,7 +34,7 @@ For more check [LINK](https://neptune.ai/how-it-works).
 
 ## Datasets
 
-This repository supports detect-waste datasets (usualy COCO based annotations) with one class - waste.
+This repository supports detect-waste datasets (usualy COCO based annotations) with two class - 'litter' and 'background'.
 
 We expect the directory structure to be the following:
 ```
