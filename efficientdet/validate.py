@@ -43,12 +43,15 @@ def add_bool_arg(parser, name, default=False, help=''):  # FIXME move to utils
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Validation')
 parser.add_argument('root', metavar='DIR',
                     help='path to dataset root')
-parser.add_argument('--dataset', default='coco', type=str, metavar='DATASET',
-                    help='Name of dataset (default: "coco"')
+parser.add_argument('--ann_name', type=str,
+                    default='../annotations/binary_mixed_',
+                    help='path to annotation file (without train or test subset)')
+parser.add_argument('--dataset', default='multi', type=str, metavar='DATASET',
+                    help='Name of dataset (default: "multi"')
 parser.add_argument('--split', default='val',
                     help='validation split')
-parser.add_argument('--model', '-m', metavar='MODEL', default='tf_efficientdet_d1',
-                    help='model architecture (default: tf_efficientdet_d1)')
+parser.add_argument('--model', '-m', metavar='MODEL', default='tf_efficientdet_d2',
+                    help='model architecture (default: tf_efficientdet_d2)')
 add_bool_arg(parser, 'redundant-bias', default=None,
                     help='override model config for redundant bias layers')
 parser.add_argument('--num-classes', type=int, default=None, metavar='N',
@@ -135,7 +138,7 @@ def validate(args):
     if args.num_gpu > 1:
         bench = torch.nn.DataParallel(bench, device_ids=list(range(args.num_gpu)))
 
-    dataset = create_dataset(args.dataset, args.root, args.split)
+    dataset = create_dataset(args.dataset, args.root, args.split, args.ann_name)
     input_config = resolve_input_config(args, model_config)
     loader = create_loader(
         dataset,

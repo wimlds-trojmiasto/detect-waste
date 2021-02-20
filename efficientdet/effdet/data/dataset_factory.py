@@ -1,8 +1,7 @@
 """ Dataset factory
 
-Copyright 2020 Ross Wightman
+Updated 2021 Wimlds in Detect Waste in Pomerania
 """
-import os
 from collections import OrderedDict
 from pathlib import Path
 
@@ -11,6 +10,7 @@ from .parsers import *
 from .dataset import DetectionDatset
 from .parsers import create_parser
 
+# list of detect-waste datasets
 waste_datasets_list = ['taco', 'detectwaste', 'binary', 'multi',
                        'uav', 'mju', 'trashcan', 'wade', 'icra'
                        'drinkwaste']
@@ -44,26 +44,26 @@ def create_dataset(name, root, ann, splits=('train', 'val')):
         datasets = OrderedDict()
     elif name in waste_datasets_list:
         if name.startswith('taco'):
-            dataset_cfg = TACOCfg()
+            dataset_cfg = TACOCfg(root=root, ann=ann)
         elif name.startswith('detectwaste'):
-            dataset_cfg = DetectwasteCfg()
+            dataset_cfg = DetectwasteCfg(root=root, ann=ann)
         elif name.startswith('binary'):
-            dataset_cfg = BinaryCfg()
+            dataset_cfg = BinaryCfg(root=root, ann=ann)
         elif name.startswith('multi'):
             dataset_cfg = BinaryMultiCfg(root=root, ann=ann)
-            dataset_cfg.add_split()
+            dataset_cfg.add_split(root=root, ann=ann)
         elif name.startswith('uav'):
-            dataset_cfg = UAVVasteCfg()
+            dataset_cfg = UAVVasteCfg(root=root, ann=ann)
         elif name.startswith('trashcan'):
-            dataset_cfg = TrashCanCfg()
+            dataset_cfg = TrashCanCfg(root=root, ann=ann)
         elif name.startswith('drinkwaste'):
-            dataset_cfg = DrinkWasteCfg()
+            dataset_cfg = DrinkWasteCfg(root=root, ann=ann)
         elif name.startswith('mju'):
-            dataset_cfg = MJU_WasteCfg()
+            dataset_cfg = MJU_WasteCfg(root=root, ann=ann)
         elif name.startswith('wade'):
-            dataset_cfg = WadeCfg()
+            dataset_cfg = WadeCfg(root=root, ann=ann)
         elif name.startswith('icra'):
-            dataset_cfg = ICRACfg()
+            dataset_cfg = ICRACfg(root=root, ann=ann)
         else:
             assert False, f'Unknown dataset parser ({name})'
         for s in splits:
