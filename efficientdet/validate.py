@@ -115,8 +115,7 @@ def validate(args):
         num_classes=args.num_classes,
         pretrained=args.pretrained,
         redundant_bias=args.redundant_bias,
-        checkpoint_path=args.checkpoint,
-        checkpoint_ema=args.use_ema,
+        checkpoint_path=args.checkpoint
     )
     model_config = bench.config
 
@@ -137,8 +136,8 @@ def validate(args):
 
     if args.num_gpu > 1:
         bench = torch.nn.DataParallel(bench, device_ids=list(range(args.num_gpu)))
-
-    dataset = create_dataset(args.dataset, args.root, args.split, args.ann_name)
+    dataset = create_dataset(args.dataset, args.root,
+                             args.ann_name, splits=args.split)
     input_config = resolve_input_config(args, model_config)
     loader = create_loader(
         dataset,

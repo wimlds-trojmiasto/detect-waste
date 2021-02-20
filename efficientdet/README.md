@@ -92,8 +92,8 @@ Example run:
     Example configuration for running on gpu with id=1:
 
     ```bash
-    python3 efficientdet/train.py "/dih4/dih4_2/wimlds/data/all_detect_images" \
-        --ann_name "../annotations/annotations_" --model tf_efficientdet_d2 \
+    python3 efficientdet/train.py /dih4/dih4_2/wimlds/data/all_detect_images \
+        --ann_name ../annotations/annotations --model tf_efficientdet_d2 \
         --batch-size 4 --decay-rate 0.95 --lr .001 --workers 4 --warmup-epochs 5 \
         --model-ema --dataset DetectwasteCfg --pretrained --num-classes 7 \
         --color-jitter 0.1 --reprob 0.2 --epochs 20 --device cuda:1
@@ -102,8 +102,8 @@ Example run:
     For single class in mixed dataset:
 
     ```bash
-    python3 efficientdet/train.py "/dih4/dih4_2/wimlds/data/all_detect_images" \
-    --ann_name "../annotations/binary_mixed_" --model tf_efficientdet_d2 \
+    python3 efficientdet/train.py /dih4/dih4_2/wimlds/data/all_detect_images \
+    --ann_name ../annotations/binary_mixed --model tf_efficientdet_d2 \
     --batch-size 4 --decay-rate 0.95 --lr .001 --workers 4 --warmup-epochs 5 \
     --model-ema --dataset multi --pretrained --num-classes 1 --color-jitter 0.1 \
     --reprob 0.2 --epochs 20 --device cuda:1
@@ -118,8 +118,8 @@ Example run:
     To use other architecture from *model_config.py* select a dict and use it as `--model` param in your  `efficientdet/tools/train.sh` file e.g. `mobiledetv3_large`
 
     ```bash
-    python3 efficientdet/train.py "/dih4/dih4_2/wimlds/data/all_detect_images" \
-    --ann_name "../annotations/annotations_" --model mobiledetv3_large \
+    python3 efficientdet/train.py /dih4/dih4_2/wimlds/data/all_detect_images \
+    --ann_name ../annotations/annotations --model mobiledetv3_large \
     --batch-size 4 --decay-rate 0.95 --lr .001 --workers 4 --warmup-epochs 5 \
     --model-ema --dataset DetectwasteCfg --pretrained --num-classes 7 \
     --color-jitter 0.1 --reprob 0.2 --epochs 200
@@ -127,3 +127,85 @@ Example run:
 
 * selecting GPUs provide desirable gpu id: `--device cuda:1`
 * selecting data augmentation methods (WIP)
+
+# Evaluation
+
+We provided `demo.py` script to draw bounding boxes on choosen image. For example script can be run on GPU (id=0) with arguments:
+```bash
+    python demo.py --save path/to/save/image.png --checkpoint path/to/checkpoint.pth --img path/or/url/to/image --device cuda:0
+```
+or on video with `--video` argument:
+```bash
+    python demo.py --save directory/to/save/frames --checkpoint path/to/checkpoint.pth --img path/to/video.mp4 --device cuda:0 --video --classes label0 label1 label2
+```
+
+If you managed to process all the frames, just run the following command from the directory where you saved the results:
+```bash
+    ffmpeg -i img%08d.jpg movie.mp4
+```
+### Run Evaluation
+Example evaluation run with COCO metrics:
+    ```bash
+        python3 efficientdet/validate.py "/dih4/dih4_2/wimlds/data/all_detect_images" \
+        --ann_name "../annotations/binary_mixed" --model tf_efficientdet_d2 \
+        --split val --batch-size 4 --workers 4 --checkpoint "/path/to/checkpoint.pth.tar" \
+        --dataset multi --num-classes 1
+    ```
+### Create Pseudolabels
+There is also a posibility to create pseudolabels in coco format by runing:
+```bash
+    python pseudolabel.py --dst_coco /path/to/save/coco.json --src_img /path/to/images --dst_images /optional/directory/to/save/images/with/bboxes --checkpoint path/to/checkpoint.pth.tar --score-thr 0.3 --device cuda:0 --classes label0 label1 label2
+```
+
+# Performance
+
+### 7-class TACO bboxes
+
+```
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.119
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.162
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.130
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.064
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.094
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.150
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.216
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.386
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.406
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.234
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.339
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.475
+```
+
+### 1-class TACO bboxes
+
+```
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.404
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.568
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.435
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.198
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.372
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.516
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.239
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.496
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.582
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.418
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.523
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.692
+```
+
+### Mixed datasets
+
+```
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.443
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.640
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.485
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.055
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.475
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.584
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.411
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.561
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.605
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.410
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.586
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.689
+```
