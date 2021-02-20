@@ -9,7 +9,7 @@ import torch
 
 import torchvision.models.detection.mask_rcnn
 
-from coco_utils import get_coco_api_from_dataset
+from data import get_coco_api_from_dataset
 from coco_eval import CocoEvaluator
 import utils
 
@@ -98,11 +98,7 @@ def evaluate(model, data_loader, device,
 
         torch.cuda.synchronize()
         model_time = time.time()
-        try:
-            outputs = model(image)
-        except:
-            print(f"ERROR: {[target['image_id'].item() for target in targets]}")
-            continue
+        outputs = model(image)
 
         # neptune.log_metric('valid/loss', loss_value)
         outputs = [{k: v.to(cpu_device)
