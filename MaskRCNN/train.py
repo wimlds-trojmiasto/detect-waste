@@ -60,7 +60,20 @@ def get_args_parser():
         default='SGD', choices=['AdamW', 'SGD'], type=str)
     # Model
     parser.add_argument('--num_classes', default=2, type=int)
-    parser.add_argument('--model', default='maskrcnn_resnet50_fpn', type=str)
+    parser.add_argument(
+        '--model', default='maskrcnn_resnet50_fpn', type=str,
+        choices=['maskrcnn_resnet50_fpn',
+                 'fasterrcnn_resnet50_fpn',
+                 'fasterrcnn_mobilenet_v3_large_fpn',
+                 'fasterrcnn_mobilenet_v3_large_320_fpn',
+                 'retinanet_resnet50_fpn',
+                 'efficientnet-b0',
+                 'efficientnet-b1',
+                 'efficientnet-b2',
+                 'efficientnet-b3',
+                 'efficientnet-b4',
+                 'efficientnet-b5',
+                 'efficientnet-b6'])
     # Launch neptune
     parser.add_argument('--neptune', action='store_true')
 
@@ -108,14 +121,15 @@ def get_instance_segmentation_model(
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     # replace the pre-trained head with a new one
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
-
-    # now get the number of input features for the mask classifier
-    in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-    hidden_layer = 256
-    # and replace the mask predictor with a new one
-    model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,
-                                                       hidden_layer,
-                                                       num_classes)
+    if model_name.startswith('mask') or model_name.startswith('efficientnet'):
+        # now get the number of input features for the mask classifier
+        in_features_mask = \
+            model.roi_heads.mask_predictor.conv5_mask.in_channels
+        hidden_layer = 256
+        # and replace the mask predictor with a new one
+        model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,
+                                                           hidden_layer,
+                                                           num_classes)
     return model
 
 
@@ -123,6 +137,7 @@ if __name__ == '__main__':
     parser = get_args_parser()
     args = parser.parse_args()
     start_epoch = 0
+    return_masks = False
     if args.neptune and (not args.resume):
         import neptune
         # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
@@ -132,10 +147,13 @@ if __name__ == '__main__':
         neptune = None
 
     output_dir = Path(args.output_dir)
-
+    if args.model.startswith('mask'):
+        return_masks = True
     # use our dataset and defined transformations
-    dataset_train = build('train', args.images_dir, args.anno_name)
-    dataset_val = build('val', args.images_dir, args.anno_name)
+    dataset_train = build('train', args.images_dir,
+                          args.anno_name, return_masks)
+    dataset_val = build('val', args.images_dir,
+                        args.anno_name, return_masks)
 
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
@@ -218,12 +236,13 @@ if __name__ == '__main__':
                 neptune.log_metric(
                     'valid/bbox-mAP@0.5',
                     coco_evaluator.coco_eval['bbox'].stats[1])
-                neptune.log_metric(
-                    'valid/segm-mAP@0.5:0.95',
-                    coco_evaluator.coco_eval['segm'].stats[0])
-                neptune.log_metric(
-                    'valid/segm-mAP@0.5',
-                    coco_evaluator.coco_eval['segm'].stats[1])
+                if 'segm' in coco_evaluator.coco_eval:
+                    neptune.log_metric(
+                        'valid/segm-mAP@0.5:0.95',
+                        coco_evaluator.coco_eval['segm'].stats[0])
+                    neptune.log_metric(
+                        'valid/segm-mAP@0.5',
+                        coco_evaluator.coco_eval['segm'].stats[1])
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
         print('Training time {}'.format(total_time_str))

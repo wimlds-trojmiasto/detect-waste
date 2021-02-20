@@ -4,15 +4,11 @@ COCOObjectDetection dataset which returns image_id for evaluation.
 Mostly copy-paste from:
 https://github.com/pytorch/vision/blob/13b35ff/references/detection/coco_utils.py
 """
-import numpy
 import torch
 import torch.utils.data
 import torchvision
 from pycocotools import mask as coco_mask
 from pycocotools.coco import COCO
-
-import albumentations as A
-from albumentations.pytorch.transforms import ToTensorV2
 
 import transforms as T
 
@@ -127,92 +123,12 @@ def convert_coco_poly_to_mask(segmentations, height, width):
     return masks
 
 
-'''
-def get_train_transforms():
-    return A.Compose(
-        [
-            A.RandomSizedCrop(min_max_height=(800, 800), height=IMG_SIZE,
-                              width=IMG_SIZE, p=0.5),
-            A.OneOf([
-                A.HueSaturationValue(hue_shift_limit=0.2, sat_shift_limit=0.2,
-                                     val_shift_limit=0.2, p=0.9),
-                A.RandomBrightnessContrast(brightness_limit=0.2,
-                                           contrast_limit=0.2, p=0.9),
-            ], p=0.9),
-            A.ToGray(p=0.01),
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.5),
-            A.Resize(height=256, width=256, p=1),
-            A.Cutout(num_holes=8, max_h_size=64, max_w_size=64,
-                     fill_value=0, p=0.5),
-            ToTensorV2(p=1.0),
-        ],
-        p=1.0,
-        bbox_params=A.BboxParams(
-            format='coco',
-            min_area=0,
-            min_visibility=0,
-            label_fields=['labels']
-        )
-    )
-
-
-def get_valid_transforms():
-    return A.Compose(
-        [   
-            A.Resize(height=IMG_SIZE, width=IMG_SIZE, p=1.0),
-            ToTensorV2(p=1.0),
-        ], 
-        p=1.0,
-        bbox_params=A.BboxParams(
-            format='coco',
-            min_area=0,
-            min_visibility=0,
-            label_fields=['labels']
-        )
-    )
-
-
-def get_test_transforms():
-    return A.Compose([
-            A.Resize(height=IMG_SIZE, width=IMG_SIZE, p=1.0),
-            ToTensorV2(p=1.0),
-        ], p=1.0)
-
-
-'''
 def get_transform(train):
     transforms = []
     transforms.append(T.ToTensor())
     if train == "train":
         transforms.append(T.RandomHorizontalFlip(0.5))
     return T.Compose(transforms)
-
-
-'''
-def get_transform(image_set):
-    if image_set == "train":
-        return A.Compose([
-                    A.Resize(height=768, width=768, p=1),
-                    A.RandomCrop(width=256, height=256),
-                    A.HorizontalFlip(p=0.5),
-                    A.RandomBrightnessContrast(p=0.2),
-                    ])  # get_train_transforms()
-    elif image_set == "val":
-        return A.Compose([
-                    A.Resize(height=768, width=768, p=1),
-                    A.RandomCrop(width=256, height=256),
-                    A.HorizontalFlip(p=0.5),
-                    A.RandomBrightnessContrast(p=0.2),
-                    ])  # get_valid_transforms()
-    else:
-        return A.Compose([
-                    A.Resize(height=768, width=768, p=1),
-                    A.RandomCrop(width=256, height=256),
-                    A.HorizontalFlip(p=0.5),
-                    A.RandomBrightnessContrast(p=0.2),
-                    ])  # get_test_transforms()
-'''
 
 
 def convert_to_coco_api(ds):
@@ -277,7 +193,7 @@ def get_coco_api_from_dataset(dataset):
     return convert_to_coco_api(dataset)
 
 
-def build(image_set, images_path, annotation_path):
+def build(image_set, images_path, annotation_path, return_masks=True):
     PATHS = {
         "train": (images_path,
                   f'{annotation_path}_train.json'),
@@ -289,5 +205,6 @@ def build(image_set, images_path, annotation_path):
 
     img_folder, ann_file = PATHS[image_set]
     dataset = DetectWasteMultiDataset(img_folder, ann_file,
-                                      transforms=get_transform(image_set))
+                                      transforms=get_transform(image_set),
+                                      return_masks=return_masks)
     return dataset
