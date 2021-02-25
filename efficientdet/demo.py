@@ -47,9 +47,9 @@ def get_args_parser():
 
 
 # standard PyTorch mean-std input image normalization
-def get_transforms(im):
+def get_transforms(im, size=768):
     transform = T.Compose([
-        T.Resize((768, 768)),
+        T.Resize((size, size)),
         T.ToTensor(),
         T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
@@ -192,7 +192,7 @@ def plot_results(pil_img, prob, boxes, classes=['Litter'],
         colors = 100 * [
            [0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
            [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
-    for p, (xmin, ymin, xmax, ymax), c in zip(prob, boxes.tolist(), colors):
+    for p, (xmin, ymin, xmax, ymax), c in zip(prob, boxes, colors):
         ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
                                    fill=False, color=c, linewidth=3))
         cl = int(p[1]-1)
@@ -256,7 +256,7 @@ def main(args):
                                    tuple(img.size()[2:]))
 
     # plot and save demo image
-    plot_results(im, probas, bboxes_scaled, args.classes, args.save)
+    plot_results(im, probas, bboxes_scaled.tolist(), args.classes, args.save)
 
 
 if __name__ == '__main__':
