@@ -161,7 +161,7 @@ def train(args, model, device):
     running_loss = 0
     print_every = 10
     train_losses, test_losses = [], []
-
+    model.to(device)
     for epoch in range(args.epochs):  # loop over the dataset multiple times
         for inputs, labels in trainloader:
             steps += 1

@@ -93,9 +93,9 @@ Example run:
 
     ```bash
     python3 efficientdet/train.py /dih4/dih4_2/wimlds/data/all_detect_images \
-        --ann_name ../annotations/annotations --model tf_efficientdet_d2 \
+        --ann_name annotations/annotations --model tf_efficientdet_d2 \
         --batch-size 4 --decay-rate 0.95 --lr .001 --workers 4 --warmup-epochs 5 \
-        --model-ema --dataset DetectwasteCfg --pretrained --num-classes 7 \
+        --model-ema --dataset detectwaste --pretrained --num-classes 7 \
         --color-jitter 0.1 --reprob 0.2 --epochs 20 --device cuda:1
     ```
 
@@ -103,7 +103,7 @@ Example run:
 
     ```bash
     python3 efficientdet/train.py /dih4/dih4_2/wimlds/data/all_detect_images \
-    --ann_name ../annotations/binary_mixed --model tf_efficientdet_d2 \
+    --ann_name annotations/binary_mixed --model tf_efficientdet_d2 \
     --batch-size 4 --decay-rate 0.95 --lr .001 --workers 4 --warmup-epochs 5 \
     --model-ema --dataset multi --pretrained --num-classes 1 --color-jitter 0.1 \
     --reprob 0.2 --epochs 20 --device cuda:1
@@ -119,9 +119,9 @@ Example run:
 
     ```bash
     python3 efficientdet/train.py /dih4/dih4_2/wimlds/data/all_detect_images \
-    --ann_name ../annotations/annotations --model mobiledetv3_large \
+    --ann_name annotations/annotations --model mobiledetv3_large \
     --batch-size 4 --decay-rate 0.95 --lr .001 --workers 4 --warmup-epochs 5 \
-    --model-ema --dataset DetectwasteCfg --pretrained --num-classes 7 \
+    --model-ema --dataset detectwaste --pretrained --num-classes 7 \
     --color-jitter 0.1 --reprob 0.2 --epochs 200
     ```
 
@@ -132,11 +132,14 @@ Example run:
 
 We provided `demo.py` script to draw bounding boxes on choosen image. For example script can be run on GPU (id=0) with arguments:
 ```bash
-    python demo.py --save path/to/save/image.png --checkpoint path/to/checkpoint.pth --img path/or/url/to/image --device cuda:0
+    python demo.py --save path/to/save/image.png --checkpoint path/to/checkpoint.pth \
+                   --img path/or/url/to/image --device cuda:0
 ```
 or on video with `--video` argument:
 ```bash
-    python demo.py --save directory/to/save/frames --checkpoint path/to/checkpoint.pth --img path/to/video.mp4 --device cuda:0 --video --classes label0 label1 label2
+    python demo.py --save directory/to/save/frames --checkpoint path/to/checkpoint.pth \
+                   --img path/to/video.mp4 --device cuda:0 --video \
+                   --classes label0 label1 label2
 ```
 
 If you managed to process all the frames, just run the following command from the directory where you saved the results:
@@ -145,16 +148,20 @@ If you managed to process all the frames, just run the following command from th
 ```
 ### Run Evaluation
 Example evaluation run with COCO metrics:
-    ```bash
-        python3 efficientdet/validate.py "/dih4/dih4_2/wimlds/data/all_detect_images" \
-        --ann_name "../annotations/binary_mixed" --model tf_efficientdet_d2 \
-        --split val --batch-size 4 --workers 4 --checkpoint "/path/to/checkpoint.pth.tar" \
-        --dataset multi --num-classes 1
-    ```
+
+```bash
+    python3 efficientdet/validate.py "/dih4/dih4_2/wimlds/data/all_detect_images" \
+    --ann_name "../annotations/binary_mixed" --model tf_efficientdet_d2 \
+    --split val --batch-size 4 --workers 4 --checkpoint "/path/to/checkpoint.pth.tar" \
+    --dataset multi --num-classes 1
+```
 ### Create Pseudolabels
 There is also a posibility to create pseudolabels in coco format by runing:
 ```bash
-    python pseudolabel.py --dst_coco /path/to/save/coco.json --src_img /path/to/images --dst_images /optional/directory/to/save/images/with/bboxes --checkpoint path/to/checkpoint.pth.tar --score-thr 0.3 --device cuda:0 --classes label0 label1 label2
+    python pseudolabel.py --dst_coco /path/to/save/coco.json --src_img /path/to/images \
+                          --dst_images /optional/directory/to/save/images/with/bboxes \
+                          --checkpoint path/to/checkpoint.pth.tar --score-thr 0.3 \
+                          --device cuda:0 --classes label0 label1 label2
 ```
 
 # Performance
