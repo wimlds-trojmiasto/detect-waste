@@ -44,17 +44,39 @@ class DetectionDatset(data.Dataset):
         if self._parser.has_labels:
             ann = self._parser.get_ann_info(index)
             target.update(ann)
-
         img_path = self.data_dir / img_info['file_name']
         img = Image.open(img_path).convert('RGB')
-
-        if self.transforms is not None:         
-            transformed = self.transforms(image=np.asarray(img), bbox_classes=target['cls'], bbox=target['bbox'])
-            img = transformed['image']
-            img = Image.fromarray(img.astype('uint8'), 'RGB')
-            target['bbox'] = transformed['bbox']
-            target['cls'] = transformed['bbox_classes']
+        if self.transforms is not None:
+            img = torch.as_tensor(np.array(img), dtype=torch.uint8)
+            voc_boxes = []
+            for coord in target['bbox']:
+                xmin = coord[1]
+                ymin = coord[0]
+                xmax = coord[3]
+                ymax = coord[2]
+                if xmin<1:
+                    xmin = 1
+                if ymin<1:
+                    ymin = 1
+                if xmax>=img.shape[1]-1:
+                    xmax = img.shape[1]-1
+                if ymax>=img.shape[0]-1:
+                    ymax = img.shape[0]-1
+                voc_boxes.append([xmin, ymin, xmax, ymax])
+            transformed = self.transforms(image=np.array(img), bbox_classes=target['cls'], bboxes=voc_boxes)
+            img = torch.as_tensor(transformed['image'], dtype=torch.uint8)
+            target['bbox'] = []
+            for coord in transformed['bboxes']:
+                ymin = int(coord[1])
+                xmin = int(coord[0])
+                ymax = int(coord[3])
+                xmax = int(coord[2])
+                target['bbox'].append([ymin, xmin, ymax, xmax])
+            target['bbox'] = np.array(target['bbox'], dtype=np.float32)
+            target['cls'] = np.array(transformed['bbox_classes'])
+            img = Image.fromarray(np.array(img).astype('uint8'), 'RGB')
             target['img_size'] = img.size
+            
         if self.transform is not None:
             img, target = self.transform(img, target)
 
@@ -75,6 +97,13 @@ class DetectionDatset(data.Dataset):
     def transform(self, t):
         self._transform = t
 
+    @property
+    def transforms(self):
+        return self._transforms
+
+    @transforms.setter
+    def transforms(self, t):
+        self._transforms = t
 
 class SkipSubset(data.Dataset):
     r"""
@@ -106,3 +135,11 @@ class SkipSubset(data.Dataset):
     @transform.setter
     def transform(self, t):
         self.dataset.transform = t
+
+    @property
+    def transforms(self):
+        return self.dataset.transforms
+
+    @transforms.setter
+    def transforms(self, t):
+        self.dataset.transforms = t

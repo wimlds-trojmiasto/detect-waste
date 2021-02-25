@@ -178,6 +178,7 @@ def create_loader(
         img_size = input_size
 
     if is_training:
+        transforms = get_transform()
         transform = transforms_coco_train(
             img_size,
             interpolation=interpolation,
@@ -185,8 +186,8 @@ def create_loader(
             fill_color=fill_color,
             mean=mean,
             std=std)
-        transforms = get_transform()
     else:
+        transforms = None
         transform = transforms_coco_eval(
             img_size,
             interpolation=interpolation,
@@ -194,7 +195,6 @@ def create_loader(
             fill_color=fill_color,
             mean=mean,
             std=std)
-        transforms = None
     dataset.transforms = transforms
     dataset.transform = transform
 
