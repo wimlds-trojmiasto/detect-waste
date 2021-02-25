@@ -4,6 +4,7 @@ import torchvision
 
 from .coco import build as build_coco
 from .coco import build_taco
+from .coco import build_multi
 
 def get_coco_api_from_dataset(dataset):
     for _ in range(10):
@@ -20,6 +21,8 @@ def build_dataset(image_set, args):
         return build_coco(image_set, args)
     if args.dataset_file == 'taco':
         return build_taco(image_set, args)
+    if args.dataset_file == 'multi':
+        return build_multi(image_set, args)
     if args.dataset_file == 'coco_panoptic':
         # to avoid making panopticapi required for coco
         from .coco_panoptic import build as build_coco_panoptic

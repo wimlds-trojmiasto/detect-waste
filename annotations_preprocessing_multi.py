@@ -8,8 +8,8 @@ import numpy as np
 # update all annotations in one run
 from utils.dataset_converter import convert_dataset, \
                                     taco_categories_to_detectwaste, \
-                                    convert_to_binary
-from utils.dataset_converter import concatenate_datasets
+                                    convert_to_binary, \
+                                    concatenate_datasets
 from utils.split_coco_dataset import split_coco_dataset
 
 def get_args_parser():
