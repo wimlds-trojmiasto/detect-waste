@@ -196,6 +196,7 @@ If you managed to process all the frames, just run the following command from th
 | EfficientNet-B2 | 7         |72.66| Random  | per epoch      |
 | EfficientNet-B2 | 7         |68.31| Weighted| per epoch      |
 | EfficientNet-B2 | 7         |74.43| Random  | None           |
+| ResNet-50       | 8         |60.60| Weighted| None           |
 
 * 8 classes - 8th class for additional background category
 * we provided 2 methods to update pseudo-labels: per batch and per epoch

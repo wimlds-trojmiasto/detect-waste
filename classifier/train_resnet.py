@@ -39,6 +39,9 @@ def get_args_parser():
     parser.add_argument('--epochs', default=30, type=int)
     parser.add_argument('--lr', default=0.001, type=float)
     parser.add_argument('--momentum', default=0.9, type=float)
+    # Neptune settings
+    parser.add_argument('--neptune', action='store_true', default=False,
+                        help='Launch experiment on neptune (if avail)')
     return parser
 
 
@@ -146,7 +149,7 @@ def eval(testloader, model, device):
              if class_total[i] != 0 else 0)))
 
 
-def train(args, model, device):
+def train(args, model, device, neptune=False):
     # load data
     trainloader, testloader = load_split_train_test(args.data_img)
 
@@ -195,6 +198,10 @@ def train(args, model, device):
                       f"Train loss: {running_loss / print_every:.3f}.. "
                       f"Test loss: {test_loss / len(testloader):.3f}.. "
                       f"Test accuracy: {accuracy / len(testloader):.3f}")
+                if neptune:
+                    neptune.log_metric('train_loss', running_loss / print_every)
+                    neptune.log_metric('val_loss', test_loss / len(testloader))
+                    neptune.log_metric('val_acc', accuracy / len(testloader))
                 running_loss = 0
                 model.train()
     # plotting loss
@@ -204,7 +211,7 @@ def train(args, model, device):
     plt.savefig(os.path.join(args.out, 'logs.jpg'))
 
     print('Finished Training...')
-    out_path = os.path.join(args.out, 'classification_net.pth')
+    out_path = os.path.join(args.out, 'classification_ResNet50.pth')
     torch.save(model.state_dict(), out_path)
 
     eval(testloader, model, device)
@@ -241,7 +248,7 @@ if __name__ == '__main__':
         model.eval()
         images, labels, gt_cl = get_random_images(args.data_img,
                                                   test_transforms, args.num)
-        classes = ['Bio', 'Glass', 'Metals-and-plastics',
+        classes = ['Background', 'Bio', 'Glass', 'Metals-and-plastics',
                    'Non-recyclable', 'Other', 'Paper']
         fig = plt.figure(figsize=(10, 10))
         for ii in range(len(images)):
@@ -255,4 +262,11 @@ if __name__ == '__main__':
             plt.imshow(image)
         plt.savefig(os.path.join(args.out, args.name))
     else:
-        train(args, model, device)
+        if args.neptune:
+            import neptune
+            # your NEPTUNE_API_TOKEN should be add to ~./bashrc to run this file
+            neptune.init(project_qualified_name='detectwaste/classification')
+            neptune.create_experiment(name='ResNet50')
+        else:
+            neptune = False
+        train(args, model, device, neptune)
