@@ -1,12 +1,16 @@
 # Detect waste
-AI4Good project for detecting waste in environment
+AI4Good project for detecting waste in environment.
 [www.detectwaste.ml](www.detectwaste.ml)
+
+Did you know that we produce 300 million tons of plastic every year? And only the part of it is properly recycled.
+
+The idea of detect waste project is to use Artificial Intelligence to detect plastic waste in the environment. Our solution is applicable for video and photography. Our goal is to use AI for Good.
 
 ![](notebooks/demo.png)
 
 # Datasets
 
-In Detect Waste in Pomerania project we used 9 publicity available datasets, and some data collected using [Google Images Download](https://github.com/hardikvasa/google-images-download).
+In Detect Waste in Pomerania project we used 9 publicity available datasets, and additional data collected using [Google Images Download](https://github.com/hardikvasa/google-images-download).
 
 For more details, about the data we used, check our [jupyter notebooks](https://github.com/wimlds-trojmiasto/detect-waste/tree/main/notebooks) with data exploratory analysis.
 
@@ -26,10 +30,10 @@ For more details, about the data we used, check our [jupyter notebooks](https://
 
     Clone UAVVaste repository
         `git clone https://github.com/UAVVaste/UAVVaste.git`
-    
+
     Install requirements
         `pip3 install -r requirements.txt`
-    
+
     Download annotated data
         `python3 main.py`
 
@@ -43,7 +47,7 @@ For more details, about the data we used, check our [jupyter notebooks](https://
     Download directly from web
     `wget https://conservancy.umn.edu/bitstream/handle/11299/214366/trash_ICRA19.zip?sequence=12&isAllowed=y`
 
-* [MJU-Waste](https://github.com/realwecan/mju-waste/) 
+* [MJU-Waste](https://github.com/realwecan/mju-waste/)
 
     Download directly from [google drive](https://drive.google.com/file/d/1o101UBJGeeMPpI-DSY6oh-tLk9AHXMny/view)
 
@@ -57,7 +61,7 @@ For more details, about the data we used, check our [jupyter notebooks](https://
 
     Clone wade-ai repository
         `git clone https://github.com/letsdoitworld/wade-ai.git`
-    
+
     For coco annotation check: [majsylw/wade-ai/tree/coco-annotation](https://github.com/majsylw/wade-ai/tree/coco-annotation/Trash_Detection/trash/dataset)
 
 * [TrashNet](https://github.com/garythung/trashnet) - The dataset spans six classes: glass, paper, cardboard, plastic, metal, and trash.
@@ -99,7 +103,7 @@ To train on one or multiple datasets on a single class:
 
     `bash annotations_preprocessing_multi.sh`
 
-Script will automaticlly split all datasets to train and test set with MultilabelStratifiedShuffleSplit. Then it will convert datasets to one class - litter. Finally all datasets will be concatenated to form single train and test files *annotations/binary_mixed_train.json* and *annotations/binary_mixed_test*.
+Script will automatically split all datasets to train and test set with `MultilabelStratifiedShuffleSplit`. Then it will convert datasets to one class - litter. Finally all datasets will be concatenated to form single train and test files `annotations/binary_mixed_train.json` and `annotations/binary_mixed_test`.
 
 For more details check [annotations directory](https://github.com/wimlds-trojmiasto/detect-waste/tree/main/annotations).
 
@@ -107,11 +111,13 @@ For more details check [annotations directory](https://github.com/wimlds-trojmia
 
 To read more about past waste detection works check [litter-detection-review](https://github.com/majsylw/litter-detection-review).
 
-* ### EfficientDet (WIP)
+* ### EfficientDet
 
     To train EfficientDet check `efficientdet/README.md`
-    
-    For implementation details see [efficientdet-pytorch](https://github.com/rwightman/efficientdet-pytorch) by Ross Wightman.
+
+    To train EfficientDet implemented in Pytorch Lightning check branch `effdet_lightning`
+
+    We based our implementation on [efficientdet-pytorch](https://github.com/rwightman/efficientdet-pytorch) by Ross Wightman.
 
 * ### DETR
 
@@ -158,6 +164,23 @@ If you managed to process all the frames, just run the following command from th
 ```bash
     ffmpeg -i img%08d.jpg movie.mp4
 ```
+## Tracking experiments
+For experiment tracking we mostly used [neptune.ai](https://neptune.ai/). To use `Neptune` follow the official Neptune tutorial on their website:
+* Log in to your account
+* Find and set Neptune API token on your system as environment variable (your NEPTUNE_API_TOKEN should be added to ~./bashrc)
+* Add your project_qualified_name name in the `train_<net_name>.py`
+    ```python
+      neptune.init(project_qualified_name = 'YOUR_PROJECT_NAME/detect-waste')
+    ```
+  Currently it is set to a private detect-waste neptune space.
+
+* install neptune-client library
+
+    ```bash
+      pip install neptune-client
+    ```
+
+For more check [LINK](https://neptune.ai/how-it-works).
 
 ## Our results
 
@@ -205,15 +228,23 @@ If you managed to process all the frames, just run the following command from th
 ------------
 
     ├── LICENSE
-    ├── README.md 
+    ├── README.md
     |         <- The top-level README for developers using this project.
-    ├── docs               <- documents
+    ├── annotations        <- annotations in json
+    │   
+    ├── classifier        <- implementation of CNN for litter classification
     │
-    ├── logs          	    <- Tracking experiments e.g. Tensorboard
-    |
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
+    ├── detr              <- implementation of DETR for litter detection
     │
-    ├── notebooks          <- Jupyter notebooks. 
+    ├── efficientdet      <- implementation of EfficientDet for litter detection
+    │
+    ├── fastrcnn          <- implementation of FastRCNN for litter segmentation
+    │
+    ├── maskrcnn          <- implementation of MaskRCNN for litter segmentation
+    │
+    ├── notebooks          <- jupyter notebooks.
+    │   
+    ├── utils              <- source code with useful functions
     │
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`

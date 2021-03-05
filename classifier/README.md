@@ -1,16 +1,16 @@
 # CNN (PyTorch) based on ResNet50, and EfficientNet (PyTorch Lightning) for waste classification
 
 Many objects in TACO dataset have Unknown label. This waste is mostly invisible or destroyed.
-To adress this challenge at the early stage of the project we tried to train classificator tor this type of waste to know their true category.
+To address this challenge at the early stage of the project we trained classifier to this type of waste to know their true category.
 
-Additionaly during our project we realized that existing datasets do not provide a large number of object classes with sufficient annotated training data. In addition, as we managed to find out, differentiating waste instances under a single class label is also challenging. In this regard, we decided to formulate our problem as a one-class object detection, and classification in next step.
+Additionally during our project we realized that existing datasets do not provide a large number of object classes with sufficient annotated training data. In addition, as we managed to find out, differentiating waste instances under a single class label is also challenging. In this regard, we decided to formulate our problem as a one-class object detection, and classification in next step.
 
 # Implementation
 A PyTorch script for litter classification:
- 1) based on implementation from [Tutorial on training ResNet](https://towardsdatascience.com/how-to-train-an-image-classifier-in-pytorch-and-use-it-to-perform-basic-inference-on-single-images-99465a1e9bf5?gi=ecba7eb12775),
- 2) implemented using [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning) with pseudo-labeling technique.
+ 1) `ResNet` - based on implementation from [Tutorial on training ResNet](https://towardsdatascience.com/how-to-train-an-image-classifier-in-pytorch-and-use-it-to-perform-basic-inference-on-single-images-99465a1e9bf5?gi=ecba7eb12775),
+ 2) `EfficientNet` - EfficientNet implementation with pseudo-labeling technique. (implemented using [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning))
 
-Additionaly to address class imbalance we used WeightedRandomSampler.
+Additionally to address class imbalance we used `WeightedRandomSampler`.
 
 ## Requirements
 ` pip install -r requirements.txt `
@@ -69,20 +69,42 @@ path/to/images/          # all images
 
     ### To run test
     ```bash
-    python train_resnet.py --data_img /dih4/dih4_2/wimlds/smajchrowska/images_square/test/ \
-                           --out /dih4/dih4_2/wimlds/smajchrowska/categories --mode test \
-                           --name test.jpg --device cpu
+    python train_resnet.py --data_img path/to/images/images_square/test/ \
+                           --out path/to/checkpoints/ \
+                           --mode test \
+                           --name test.jpg \
+                           --device cpu \
     ```
 
     ### To run training (on GPU id=1)
     ```bash
-    python train_resnet.py --data_img /dih4/dih4_2/wimlds/smajchrowska/images_square/train/ \
-                           --out /dih4/dih4_2/wimlds/smajchrowska/ --mode train --device cuda:1
+    python train_resnet.py --data_img path/to/images/train/ \
+                           --out path/to/checkpoints/ \
+                           --mode train \
+                           --device cuda:1 \
     ```
 
 * ## EfficientNet
 
-    `TBA`
+    This implementation uses [lukemelas/EfficientNet-PyTorch](https://github.com/lukemelas/EfficientNet-PyTorch) implementation.
+    EfficientNet is implemented with PyTorch Lightning.
+
+    ### To run training use `train_effnet.py`
+
+    ```bash
+    python train_effnet.py --data_img path/to/images/train/ \
+                           --save path/to/checkpoint.ckpt \
+                           --model efficientnet-b2 \
+                           --gpu 1 \
+                           --pseudolabel_mode per-batch \
+                           --neptune \
+    ```
+
+    * efficientnet - any efficientnet form b0 to b7 can be used
+    * pseudolabeling - allow to use unannotated data. Can be use in `per-epoch` and `per-batch` modes, which refers to how often    pseudolabels will be upadted
+    * data augmentation - any data augmentation form  [albumentations](https://github.com/albumentations-team/albumentations) can be applied
+
+
 
 # Performance
 
