@@ -139,6 +139,51 @@ To read more about past waste detection works check [litter-detection-review](ht
 * ### Classification with ResNet50 and EfficientNet
     To train choosen model check `classifier/README.md`
 
+
+## Example usage - models training
+
+1. Waste detection using EfficientDet
+
+In our github repository you will find [EfficientDet code](https://github.com/wimlds-trojmiasto/detect-waste/tree/main/efficientdet) already adjusted for our mixed dataset. To run training for single class just clone repository, move to efficientdet directory, install necessary dependencies, and launch ```train.py``` script with adjusted parameters, like: path to images, path to directory with annotations (you can use ours provided in [annotations directory](https://github.com/wimlds-trojmiasto/detect-waste/tree/main/annotations)), model parameters and its specific name. It can be done as in the example below.
+
+```bash
+python3 train.py path_to_all_images \
+--ann_name ../annotations/binary_mixed --model tf_efficientdet_d2 \
+--batch-size 4 --decay-rate 0.95 --lr .001 --workers 4 --warmup-epochs 5 \
+--model-ema --dataset multi --pretrained --num-classes 1 --color-jitter 0.1 \
+--reprob 0.2 --epochs 20 --device cuda:0
+```
+
+2. Waste classification using EfficientNet
+
+In this step switch to [classifier directory](https://github.com/wimlds-trojmiasto/detect-waste/tree/main/classifier). At first just crop waste objects from images of waste (the same as in previous step).
+
+```bash
+python3 cut_bbox_litter.py --src_img path_to_whole_images \
+                           --dst_img path_to_destination_directory_for_images \
+                           --square --zoom 1
+```
+
+In case of using unlabelled [OpenLitterMap dataset](https://openlittermap.com/), make pseudo-predictions using previously trained EfficientDet and map them with orginal openlittermap annotations.
+
+```bash
+python3 sort_openlittermap.py \
+                        --src_ann path_to_original_openlittermap_annotations \
+                        --coco path_to_our_openlittermap_annotations \
+                        --src_img path_to_whole_images \
+                        --dst_img path_to_destination_directory_for_images
+```
+
+To run classifier training in command line just type:
+
+```bash
+python train_effnet.py --data_img path/to/images/train/ \
+                       --save path/to/checkpoint.ckpt \
+                       --model efficientnet-b2 \
+                       --gpu 0 \
+                       --pseudolabel_mode per-batch
+```
+
 ## Evaluation
 
 We provided `make_predictions.py` script to draw bounding boxes on choosen image. For example script can be run on GPU (id=0) with arguments:
@@ -164,6 +209,7 @@ If you managed to process all the frames, just run the following command from th
 ```bash
     ffmpeg -i img%08d.jpg movie.mp4
 ```
+
 ## Tracking experiments
 For experiment tracking we mostly used [neptune.ai](https://neptune.ai/). To use `Neptune` follow the official Neptune tutorial on their website:
 * Log in to your account
