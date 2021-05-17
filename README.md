@@ -1,6 +1,8 @@
 # Detect waste
 AI4Good project for detecting waste in environment.
-[www.detectwaste.ml](www.detectwaste.ml)
+[www.detectwaste.ml](www.detectwaste.ml).
+
+Our latest results are provided in paper [Waste detection in Pomerania: non-profit project for detecting waste in environment](https://arxiv.org/abs/2105.06808).
 
 Did you know that we produce 300 million tons of plastic every year? And only the part of it is properly recycled.
 
@@ -269,6 +271,20 @@ For more check [LINK](https://neptune.ai/how-it-works).
 
 * 8 classes - 8th class for additional background category
 * we provided 2 methods to update pseudo-labels: per batch and per epoch
+
+## Citation
+
+```
+@misc{majchrowska2021waste,
+      title={Waste detection in Pomerania: non-profit project for detecting waste in environment}, 
+      author={Sylwia Majchrowska and Agnieszka Mikołajczyk and Maria Ferlin and Zuzanna Klawikowska
+              and Marta A. Plantykow and Arkadiusz Kwasigroch and Karol Majek},
+      year={2021},
+      eprint={2105.06808},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
 
 ## Project Organization (WIP)
 ------------
