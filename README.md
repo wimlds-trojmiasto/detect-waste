@@ -7,7 +7,9 @@
 AI4Good project for detecting waste in environment.
 [www.detectwaste.ml](www.detectwaste.ml).
 
-Our latest results are provided in paper [Waste detection in Pomerania: non-profit project for detecting waste in environment](https://arxiv.org/abs/2105.06808).
+Our latest results were published in Waste Management journal in article titled [Deep learning-based waste detection in natural and urban environments](https://www.sciencedirect.com/science/article/pii/S0956053X21006474?dgcid=coauthor#fn1).
+
+You can find more technical details in our technical report [Waste detection in Pomerania: non-profit project for detecting waste in environment](https://arxiv.org/abs/2105.06808).
 
 Did you know that we produce 300 million tons of plastic every year? And only the part of it is properly recycled.
 
@@ -280,6 +282,21 @@ For more check [LINK](https://neptune.ai/how-it-works).
 ## Citation
 
 ```
+@article{MAJCHROWSKA2022274,
+      title = {Deep learning-based waste detection in natural and urban environments},
+      journal = {Waste Management},
+      volume = {138},
+      pages = {274-284},
+      year = {2022},
+      issn = {0956-053X},
+      doi = {https://doi.org/10.1016/j.wasman.2021.12.001},
+      url = {https://www.sciencedirect.com/science/article/pii/S0956053X21006474},
+      author = {Sylwia Majchrowska and Agnieszka Mikołajczyk and Maria Ferlin and Zuzanna Klawikowska
+                and Marta A. Plantykow and Arkadiusz Kwasigroch and Karol Majek},
+      keywords = {Object detection, Semi-supervised learning, Waste classification benchmarks,
+                  Waste detection benchmarks, Waste localization, Waste recognition},
+}
+
 @misc{majchrowska2021waste,
       title={Waste detection in Pomerania: non-profit project for detecting waste in environment}, 
       author={Sylwia Majchrowska and Agnieszka Mikołajczyk and Maria Ferlin and Zuzanna Klawikowska
