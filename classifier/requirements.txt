@@ -1,6 +1,6 @@
 Cython==0.29.21
 matplotlib==3.3.3
-numpy==1.21.0
+numpy==1.22.0
 oauthlib==3.1.0
 olefile==0.46
 opencv-contrib-python==4.4.0.46
