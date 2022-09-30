@@ -262,6 +262,8 @@ For more check [LINK](https://neptune.ai/how-it-works).
 * `*` Multi - name for mixed open dataset (with listed below datasets) for detection/segmentation task
 * `**` results achived with frozeen weights from detection task (after addition of mask head)
 
+**Pretrained weights of the best efficientdet model are available to download here: https://drive.google.com/drive/u/0/folders/1wNWoH8rdkG05sBw-OCXp3J73uJPxhcxH**
+
 ### Classification task
 
 |      model      | # classes | ACC | sampler | pseudolabeling |
