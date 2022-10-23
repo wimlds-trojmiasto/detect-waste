@@ -24,6 +24,8 @@ In Detect Waste in Pomerania project we used 9 publicity available datasets, and
 For more details, about the data we used, check our [jupyter notebooks](https://github.com/wimlds-trojmiasto/detect-waste/tree/main/notebooks) with data exploratory analysis.
 
 ## Data download (WIP)
+Data annotations: https://github.com/wimlds-trojmiasto/detect-waste/tree/main/annotations
+
 * TACO bboxes - in progress. TACO dataset can be downloaded [here](http://tacodataset.org/). TACO bboxes will be avaiable for download soon.
 
     Clone Taco repository
