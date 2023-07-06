@@ -7,7 +7,7 @@ opencv-contrib-python==4.4.0.46
 Pillow==9.0.1
 #pycocotools @ git+https://github.com/cocodataset/cocoapi.git@8c9bcc3cf640524c4c20a9c40e89cb6a2f2fa0e9#subdirectory=PythonAPI
 scikit-image==0.17.2
-scipy==1.5.2
+scipy==1.10.0
 seaborn==0.11.0
 torch==1.5.1
 torchvision==0.6.0a0+35d732a
