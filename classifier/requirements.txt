@@ -9,5 +9,5 @@ Pillow==9.0.1
 scikit-image==0.17.2
 scipy==1.5.2
 seaborn==0.11.0
-torch==1.5.1
+torch==1.13.1
 torchvision==0.6.0a0+35d732a
